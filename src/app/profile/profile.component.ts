@@ -5,29 +5,50 @@ import { FirestoreService } from '../services/firestore.service';
 @Component({
   selector: 'app-profile',
   template: `
-    <h2>Profile</h2>
+    <div class="pokemon-profile-shell" *ngIf="user as currentUser">
+      <section class="pokemon-profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">{{ currentUser.email?.charAt(0)?.toUpperCase() || 'T' }}</div>
+          <div>
+            <p class="profile-kicker">Trainer Card</p>
+            <h2>{{ displayName || 'Unnamed Trainer' }}</h2>
+          </div>
+        </div>
 
-    <div *ngIf="user as currentUser">
-      <p>Email: {{ currentUser.email }}</p>
-      <p>Email verified: {{ currentUser.emailVerified ? 'Yes' : 'No' }}</p>
+        <div class="profile-meta-row">
+          <div class="meta-item">
+            <span class="meta-label">Email</span>
+            <strong>{{ currentUser.email }}</strong>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Verification</span>
+            <strong>{{ currentUser.emailVerified ? 'Verified' : 'Unverified' }}</strong>
+          </div>
+        </div>
 
-      <form (ngSubmit)="saveProfile()">
-        <label>
-          Display name
-          <input [(ngModel)]="displayName" name="displayName" />
-        </label>
-        <br />
-        <label>
-          Favorite starter
-          <input [(ngModel)]="favoriteStarter" name="favoriteStarter" />
-        </label>
-        <br />
-        <button type="submit">Save profile</button>
-      </form>
+        <form (ngSubmit)="saveProfile()" class="profile-form">
+          <div class="field-group">
+            <label for="displayName">Display name</label>
+            <input id="displayName" [(ngModel)]="displayName" name="displayName" placeholder="Trainer name" />
+          </div>
 
-      <p *ngIf="message">{{ message }}</p>
-      <p *ngIf="error">{{ error }}</p>
-      <button type="button" (click)="sendVerificationEmail()" *ngIf="!currentUser.emailVerified">Verify email</button>
+          <div class="field-group">
+            <label for="favoriteStarter">Favorite starter</label>
+            <input id="favoriteStarter" [(ngModel)]="favoriteStarter" name="favoriteStarter" placeholder="Pikachu, Charmander, Bulbasaur..." />
+          </div>
+
+          <button type="submit" class="pokemon-primary-btn">Save profile</button>
+        </form>
+
+        <div class="profile-actions">
+          <button type="button" class="pokemon-secondary-btn" (click)="sendVerificationEmail()" *ngIf="!currentUser.emailVerified">
+            Verify email
+          </button>
+        </div>
+
+        <p *ngIf="message" class="pokemon-info-text">{{ message }}</p>
+        <p *ngIf="error" class="pokemon-error-text">{{ error }}</p>
+      </section>
     </div>
   `
 })

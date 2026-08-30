@@ -1,11 +1,11 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDT3BAgKidqTLDagW-rrellmlHBaW-Yk40",
+    authDomain: "pokemon-angular-6594e.firebaseapp.com",
+    projectId: "pokemon-angular-6594e",
+    storageBucket: "pokemon-angular-6594e.appspot.com",
+    messagingSenderId: "893860101173",
+    appId: "1:893860101173:web:5abf6057f85e4b973bc57c"
   }
 };

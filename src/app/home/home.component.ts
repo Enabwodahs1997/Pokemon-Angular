@@ -8,127 +8,143 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
 @Component({
   selector: 'app-home',
   template: `
-    <h1>Pokemon Card Game</h1>
+    <div class="pokemon-home-shell">
+      <header class="pokemon-home-header">
+        <div>
+          <p class="pokemon-kicker">Battle Arena</p>
+          <h1>Pokémon Card Game</h1>
+        </div>
+        <div class="pokemon-header-badges">
+          <span>Deck Lab</span>
+          <span>Battle Board</span>
+        </div>
+      </header>
 
-    <section>
-      <h2>Create a deck</h2>
-      <form (ngSubmit)="createDeck()">
-        <input [(ngModel)]="deckName" name="deckName" placeholder="Deck name" required />
-        <input [(ngModel)]="deckDescription" name="deckDescription" placeholder="Description" />
-        <button type="submit">Create deck</button>
-      </form>
-      <p *ngIf="message">{{ message }}</p>
-      <p *ngIf="error">{{ error }}</p>
-    </section>
+      <section class="pokemon-panel">
+        <h2>Create a deck</h2>
+        <form (ngSubmit)="createDeck()" class="pokemon-form-row">
+          <input [(ngModel)]="deckName" name="deckName" placeholder="Deck name" required />
+          <input [(ngModel)]="deckDescription" name="deckDescription" placeholder="Description" />
+          <button type="submit" class="pokemon-primary-btn">Create deck</button>
+        </form>
+        <p *ngIf="message" class="pokemon-info-text">{{ message }}</p>
+        <p *ngIf="error" class="pokemon-error-text">{{ error }}</p>
+      </section>
 
-    <section>
-      <h2>Card library</h2>
-      <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" />
-      <button type="button" (click)="searchCards()">Search</button>
-      <div *ngFor="let card of libraryCards" style="border:1px solid #ddd; margin:8px 0; padding:8px;">
-        <strong>{{ card.name }}</strong> ({{ card.cardType }})
-        <button type="button" (click)="addCardToSelectedDeck(card)">Add to selected deck</button>
-      </div>
-    </section>
+      <section class="pokemon-panel">
+        <h2>Card library</h2>
+        <div class="pokemon-search-row">
+          <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" />
+          <button type="button" class="pokemon-secondary-btn" (click)="searchCards()">Search</button>
+        </div>
+        <div *ngFor="let card of libraryCards" class="pokemon-card-item">
+          <div>
+            <strong>{{ card.name }}</strong>
+            <span> ({{ card.cardType }})</span>
+          </div>
+          <button type="button" class="pokemon-mini-btn" (click)="addCardToSelectedDeck(card)">Add to selected deck</button>
+        </div>
+      </section>
 
-    <section *ngIf="decks.length">
-      <h2>Your decks</h2>
-      <div>
-        <label>Select deck</label>
-        <select [(ngModel)]="selectedDeckId" name="selectedDeckId">
-          <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
-        </select>
-      </div>
+      <section *ngIf="decks.length" class="pokemon-panel">
+        <h2>Your decks</h2>
+        <div class="pokemon-select-row">
+          <label>Select deck</label>
+          <select [(ngModel)]="selectedDeckId" name="selectedDeckId">
+            <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
+          </select>
+        </div>
 
-      <ul>
-        <li *ngFor="let deck of decks">
-          {{ deck.name }} ({{ deck.cardCount ?? 0 }} cards)
-          <button type="button" (click)="removeDeck(deck.id)">Delete</button>
-        </li>
-      </ul>
-    </section>
+        <ul class="pokemon-list">
+          <li *ngFor="let deck of decks">
+            <span>{{ deck.name }} ({{ deck.cardCount ?? 0 }} cards)</span>
+            <button type="button" class="pokemon-mini-btn danger" (click)="removeDeck(deck.id)">Delete</button>
+          </li>
+        </ul>
+      </section>
 
-    <section *ngIf="selectedDeckId">
-      <h2>Deck editor</h2>
-      <button type="button" (click)="startBattle()">Start battle</button>
-      <ul>
-        <li *ngFor="let card of deckCards">
-          {{ card.name }} - {{ card.cardType }}
-          <button type="button" (click)="removeCard(card.id)">Remove</button>
-        </li>
-      </ul>
-    </section>
+      <section *ngIf="selectedDeckId" class="pokemon-panel">
+        <h2>Deck editor</h2>
+        <button type="button" class="pokemon-primary-btn" (click)="startBattle()">Start battle</button>
+        <ul class="pokemon-list">
+          <li *ngFor="let card of deckCards">
+            <span>{{ card.name }} - {{ card.cardType }}</span>
+            <button type="button" class="pokemon-mini-btn danger" (click)="removeCard(card.id)">Remove</button>
+          </li>
+        </ul>
+      </section>
 
-    <section *ngIf="battleState" style="margin-top: 24px;">
-      <h2>Battle Board</h2>
-      <p>Turn: {{ battleState.currentTurn }} | Turn owner: {{ battleState.turnOwner }} | Phase: {{ battleState.phase }} | Winner: {{ battleState.winner || 'ongoing' }}</p>
-      <p>Actions this turn: attacks {{ battleState.turnActions.attacksUsed }}/{{ battleState.turnActions.maxAttacks }} | energy {{ battleState.turnActions.energyUsed }}/{{ battleState.turnActions.maxEnergy }} | trainer {{ battleState.turnActions.trainerUsed }}/{{ battleState.turnActions.maxTrainer }} | swaps {{ battleState.turnActions.swapsUsed }}/{{ battleState.turnActions.maxSwaps }}</p>
+      <section *ngIf="battleState" class="pokemon-panel battle-panel">
+        <h2>Battle Board</h2>
+        <p class="pokemon-battle-meta">Turn: {{ battleState.currentTurn }} | Turn owner: {{ battleState.turnOwner }} | Phase: {{ battleState.phase }} | Winner: {{ battleState.winner || 'ongoing' }}</p>
+        <p class="pokemon-battle-meta">Actions this turn: attacks {{ battleState.turnActions.attacksUsed }}/{{ battleState.turnActions.maxAttacks }} | energy {{ battleState.turnActions.energyUsed }}/{{ battleState.turnActions.maxEnergy }} | trainer {{ battleState.turnActions.trainerUsed }}/{{ battleState.turnActions.maxTrainer }} | swaps {{ battleState.turnActions.swapsUsed }}/{{ battleState.turnActions.maxSwaps }}</p>
 
-      <div *ngIf="floatingDamage.length" style="position:relative; height: 70px; margin-bottom: 8px;">
-        <div *ngFor="let effect of floatingDamage" class="damage-bubble" [ngClass]="effect.side === 'player' ? 'player-damage' : 'opponent-damage'" style="position:absolute; top:{{ 12 + (floatingDamage.indexOf(effect) * 18) }}px; left:{{ effect.side === 'player' ? 10 : 70 }}%;">-{{ effect.damage }}</div>
-      </div>
+        <div *ngIf="floatingDamage.length" style="position:relative; height: 70px; margin-bottom: 8px;">
+          <div *ngFor="let effect of floatingDamage" class="damage-bubble" [ngClass]="effect.side === 'player' ? 'player-damage' : 'opponent-damage'" style="position:absolute; top:{{ 12 + (floatingDamage.indexOf(effect) * 18) }}px; left:{{ effect.side === 'player' ? 10 : 70 }}%;">-{{ effect.damage }}</div>
+        </div>
 
-      <div style="display:flex; justify-content:space-between; gap: 16px; margin-bottom: 16px;">
-        <div style="flex:1; padding:12px; border:1px solid #333; border-radius:8px; background:#f0f0f0;">
-          <h3>Player</h3>
-          <div *ngFor="let mon of [battleState.player.active]" style="border:2px solid #0a0; padding:12px; border-radius:8px; background:#dff7de; margin-bottom:8px;">
-            <strong>{{ mon?.name || 'No active Pokémon' }}</strong>
-            <div>{{ mon?.hp || 0 }}/{{ mon?.maxHp || 0 }} HP</div>
-            <div>Element: {{ mon?.element || '-' }}</div>
-            <div>Energy: {{ mon?.energyAttached || 0 }}</div>
-            <div *ngIf="mon">
-              <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('player', move.name)" (click)="attackWithMove('player', move.name)">
-                {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
-              </button>
+        <div class="pokemon-battle-grid">
+          <div class="pokemon-battle-side player-side">
+            <h3>Player</h3>
+            <div *ngFor="let mon of [battleState.player.active]" class="pokemon-mon-card player-mon">
+              <strong>{{ mon?.name || 'No active Pokémon' }}</strong>
+              <div>{{ mon?.hp || 0 }}/{{ mon?.maxHp || 0 }} HP</div>
+              <div>Element: {{ mon?.element || '-' }}</div>
+              <div>Energy: {{ mon?.energyAttached || 0 }}</div>
+              <div *ngIf="mon" class="pokemon-move-list">
+                <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('player', move.name)" (click)="attackWithMove('player', move.name)">
+                  {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
+                </button>
+              </div>
+            </div>
+            <div>Bench</div>
+            <div *ngFor="let mon of battleState.player.bench" class="pokemon-bench-card">
+              <strong>{{ mon.name }}</strong>
+              <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
+              <button type="button" class="pokemon-mini-btn" [disabled]="!canSwap('player', mon.id)" (click)="swapActive('player', mon.id)">Swap in</button>
             </div>
           </div>
-          <div>Bench</div>
-          <div *ngFor="let mon of battleState.player.bench" style="border:1px solid #666; padding:8px; margin:4px 0; border-radius:6px;">
-            <strong>{{ mon.name }}</strong>
-            <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
-            <button type="button" [disabled]="!canSwap('player', mon.id)" (click)="swapActive('player', mon.id)">Swap in</button>
+
+          <div class="pokemon-battle-side opponent-side">
+            <h3>Opponent</h3>
+            <div *ngFor="let mon of [battleState.opponent.active]" class="pokemon-mon-card opponent-mon">
+              <strong>{{ mon?.name || 'No active Pokémon' }}</strong>
+              <div>{{ mon?.hp || 0 }}/{{ mon?.maxHp || 0 }} HP</div>
+              <div>Element: {{ mon?.element || '-' }}</div>
+              <div>Energy: {{ mon?.energyAttached || 0 }}</div>
+              <div *ngIf="mon" class="pokemon-move-list">
+                <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('opponent', move.name)" (click)="attackWithMove('opponent', move.name)">
+                  {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
+                </button>
+              </div>
+            </div>
+            <div>Bench</div>
+            <div *ngFor="let mon of battleState.opponent.bench" class="pokemon-bench-card">
+              <strong>{{ mon.name }}</strong>
+              <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
+              <button type="button" class="pokemon-mini-btn" [disabled]="!canSwap('opponent', mon.id)" (click)="swapActive('opponent', mon.id)">Swap in</button>
+            </div>
           </div>
         </div>
 
-        <div style="flex:1; padding:12px; border:1px solid #333; border-radius:8px; background:#f5eeee;">
-          <h3>Opponent</h3>
-          <div *ngFor="let mon of [battleState.opponent.active]" style="border:2px solid #a00; padding:12px; border-radius:8px; background:#f7dede; margin-bottom:8px;">
-            <strong>{{ mon?.name || 'No active Pokémon' }}</strong>
-            <div>{{ mon?.hp || 0 }}/{{ mon?.maxHp || 0 }} HP</div>
-            <div>Element: {{ mon?.element || '-' }}</div>
-            <div>Energy: {{ mon?.energyAttached || 0 }}</div>
-            <div *ngIf="mon">
-              <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('opponent', move.name)" (click)="attackWithMove('opponent', move.name)">
-                {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
-              </button>
-            </div>
-          </div>
-          <div>Bench</div>
-          <div *ngFor="let mon of battleState.opponent.bench" style="border:1px solid #666; padding:8px; margin:4px 0; border-radius:6px;">
-            <strong>{{ mon.name }}</strong>
-            <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
-            <button type="button" [disabled]="!canSwap('opponent', mon.id)" (click)="swapActive('opponent', mon.id)">Swap in</button>
-          </div>
+        <div class="pokemon-action-row">
+          <button type="button" class="pokemon-secondary-btn" (click)="startPlayerTurn()">Start player turn</button>
+          <button type="button" class="pokemon-secondary-btn" (click)="startOpponentTurn()">Start opponent turn</button>
+          <button type="button" class="pokemon-secondary-btn" (click)="attachEnergy('player')">Attach energy</button>
+          <button type="button" class="pokemon-secondary-btn" (click)="playTrainer('player')">Play trainer</button>
+          <button type="button" class="pokemon-secondary-btn" (click)="opponentTurn()">Opponent attack</button>
+          <button type="button" class="pokemon-primary-btn" (click)="endTurn()">End turn</button>
         </div>
-      </div>
 
-      <div style="margin: 12px 0;">
-        <button type="button" (click)="startPlayerTurn()">Start player turn</button>
-        <button type="button" (click)="startOpponentTurn()">Start opponent turn</button>
-        <button type="button" (click)="attachEnergy('player')">Attach energy</button>
-        <button type="button" (click)="playTrainer('player')">Play trainer</button>
-        <button type="button" (click)="opponentTurn()">Opponent attack</button>
-        <button type="button" (click)="endTurn()">End turn</button>
-      </div>
-
-      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
-        <li *ngFor="let entry of battleState.log" style="padding:10px 12px; border-radius:10px; background:#f4f4f4; border-left: 4px solid #777; display:flex; align-items:center; gap:8px;">
-          <span style="font-size: 11px; text-transform:uppercase; font-weight:bold; padding:4px 6px; border-radius:999px; background:#dfeafc; color:#21429d;">{{ entry.type }}</span>
-          <span>{{ entry.message }}</span>
-          <span *ngIf="entry.damage" style="margin-left:auto; color:#d62828; font-weight:bold;">-{{ entry.damage }}</span>
-        </li>
-      </ul>
-    </section>
+        <ul class="pokemon-log-list">
+          <li *ngFor="let entry of battleState.log" class="pokemon-log-item">
+            <span class="pokemon-log-tag">{{ entry.type }}</span>
+            <span>{{ entry.message }}</span>
+            <span *ngIf="entry.damage" class="pokemon-damage">-{{ entry.damage }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
   `
 })
 export class HomeComponent {
