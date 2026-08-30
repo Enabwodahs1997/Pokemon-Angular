@@ -1,4 +1,11 @@
 node_modules/
 dist/
+.angular/
 .env
+.env.*
+!.env.example
 .firebase/
+
+# Local Firebase config overrides
+src/environments/*.local.ts
+src/environments/environment.local.ts
