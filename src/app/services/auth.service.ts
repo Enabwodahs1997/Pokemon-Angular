@@ -1,5 +1,13 @@
 import { Injectable } from '@angular/core';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail
+} from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -24,6 +32,18 @@ export class AuthService {
     const result = await createUserWithEmailAndPassword(this.auth, email, password);
     this.user$.next(result.user);
     return result;
+  }
+
+  async sendVerificationEmail() {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('No user is currently signed in.');
+    }
+    await sendEmailVerification(user);
+  }
+
+  async resetPassword(email: string) {
+    await sendPasswordResetEmail(this.auth, email);
   }
 
   async signOut() {

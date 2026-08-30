@@ -6,6 +6,7 @@ import { AuthService } from './services/auth.service';
   template: `
     <nav>
       <a routerLink="/">Home</a> |
+      <a routerLink="/profile" *ngIf="auth.currentUser">Profile</a> |
       <a routerLink="/login" *ngIf="!(auth.user$ | async)">Login</a>
       <span *ngIf="auth.user$ | async as user">
         Logged in: {{ user.email }} |

@@ -9,11 +9,12 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { HomeComponent } from './home/home.component';
+import { ProfileComponent } from './profile/profile.component';
 import { environment } from '../environments/environment';
 import { AuthGuard } from './guards/auth.guard';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, RegisterComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, RegisterComponent, ProfileComponent],
   imports: [
     BrowserModule,
     FormsModule,
@@ -21,7 +22,8 @@ import { AuthGuard } from './guards/auth.guard';
     RouterModule.forRoot([
       { path: '', component: HomeComponent, canActivate: [AuthGuard] },
       { path: 'login', component: LoginComponent },
-      { path: 'register', component: RegisterComponent }
+      { path: 'register', component: RegisterComponent },
+      { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }
     ])
   ],
   providers: [],
