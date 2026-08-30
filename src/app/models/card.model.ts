@@ -50,6 +50,18 @@ export interface EnergyCard {
 
 export type Card = PokemonCard | TrainerCard | EnergyCard;
 
+export interface CardTemplate {
+  id: string;
+  name: string;
+  cardType: CardType;
+  element: CardElement;
+  hp?: number;
+  description?: string;
+  attackNames?: string[];
+  power?: number;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+}
+
 export interface Deck {
   id?: string;
   name: string;
@@ -59,4 +71,22 @@ export interface Deck {
   updatedAt?: string;
   cardCount?: number;
   isPublic?: boolean;
+}
+
+export interface BoardPokemon {
+  id: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  element: CardElement;
+  attackPower: number;
+  isDefeated: boolean;
+}
+
+export interface BattleState {
+  player: BoardPokemon[];
+  opponent: BoardPokemon[];
+  currentTurn: number;
+  winner: 'player' | 'opponent' | 'draw' | null;
+  log: string[];
 }
