@@ -22,11 +22,12 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
 
       <section class="pokemon-panel">
         <h2>Create a deck</h2>
-        <form (ngSubmit)="createDeck()" class="pokemon-form-row">
+        <div class="pokemon-form-row">
           <input [(ngModel)]="deckName" name="deckName" placeholder="Deck name" required />
           <input [(ngModel)]="deckDescription" name="deckDescription" placeholder="Description" />
-          <button type="submit" class="pokemon-primary-btn">Create deck</button>
-        </form>
+          <button type="button" class="pokemon-secondary-btn" (click)="resetDeckForm()">New deck</button>
+          <button type="button" class="pokemon-primary-btn" (click)="createDeck()">Create deck</button>
+        </div>
         <p *ngIf="message" class="pokemon-info-text">{{ message }}</p>
         <p *ngIf="error" class="pokemon-error-text">{{ error }}</p>
       </section>
@@ -46,11 +47,12 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
         </div>
       </section>
 
-      <section *ngIf="decks.length" class="pokemon-panel">
+      <section *ngIf="decks.length || selectedDeckId" class="pokemon-panel">
         <h2>Your decks</h2>
         <div class="pokemon-select-row">
           <label>Select deck</label>
-          <select [(ngModel)]="selectedDeckId" name="selectedDeckId">
+          <select [(ngModel)]="selectedDeckId" name="selectedDeckId" (ngModelChange)="onDeckSelected($event)">
+            <option value="">Choose a deck to edit...</option>
             <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
           </select>
         </div>
@@ -184,6 +186,15 @@ export class HomeComponent {
     });
   }
 
+  resetDeckForm() {
+    this.deckName = '';
+    this.deckDescription = '';
+    this.selectedDeckId = '';
+    this.deckCards = [];
+    this.message = 'Ready to create a new deck.';
+    this.error = '';
+  }
+
   async createDeck() {
     this.message = '';
     this.error = '';
@@ -193,10 +204,15 @@ export class HomeComponent {
       return;
     }
 
+    if (!this.deckName.trim()) {
+      this.error = 'Please enter a deck name.';
+      return;
+    }
+
     try {
       const result = await this.deckBuilder.createDeck(user.uid, {
-        name: this.deckName,
-        description: this.deckDescription,
+        name: this.deckName.trim(),
+        description: this.deckDescription.trim(),
         format: 'custom',
         isPublic: false
       });
@@ -208,6 +224,20 @@ export class HomeComponent {
     } catch (e: any) {
       this.error = e.message || 'Unable to create deck';
     }
+  }
+
+  async onDeckSelected(deckId: string) {
+    if (!deckId) {
+      this.selectedDeckId = '';
+      this.deckCards = [];
+      return;
+    }
+
+    this.selectedDeckId = deckId;
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    await this.loadDeckCards(user.uid, deckId);
   }
 
   async searchCards() {
@@ -308,12 +338,21 @@ export class HomeComponent {
 
   async loadDecks(uid: string) {
     this.decks = await this.deckBuilder.listDecks(uid);
+
+    if (!this.selectedDeckId && this.decks.length) {
+      this.selectedDeckId = this.decks[0].id ?? '';
+    }
+
     if (this.selectedDeckId && !this.decks.some(deck => deck.id === this.selectedDeckId)) {
       this.selectedDeckId = '';
       this.deckCards = [];
+      return;
     }
+
     if (this.selectedDeckId) {
       await this.loadDeckCards(uid, this.selectedDeckId);
+    } else {
+      this.deckCards = [];
     }
   }
 

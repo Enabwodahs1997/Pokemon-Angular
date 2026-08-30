@@ -62,14 +62,8 @@ export class LoginComponent {
     this.error = '';
     this.success = '';
     try {
-      const result = await this.auth.signIn(this.email, this.password);
-      if (!result.user.emailVerified) {
-        this.error = 'Please verify your email before continuing.';
-        await this.auth.sendVerificationEmail();
-        return;
-      }
-
-      await this.router.navigateByUrl('/');
+      await this.auth.signIn(this.email, this.password);
+      await this.router.navigateByUrl('/', { replaceUrl: true });
     } catch (e: any) {
       this.error = e.message || 'Login failed';
     }

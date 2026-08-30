@@ -22,8 +22,8 @@ Choose `Hosting` and `Firestore` (optional). When asked for build output, use `d
 
 3. Create a local Firebase override file that is not tracked by Git:
 
-```ts
-// src/environments/environment.local.ts
+```powershell
+@'
 export const environment = {
   production: false,
   firebase: {
@@ -32,9 +32,10 @@ export const environment = {
     projectId: "YOUR_PROJECT_ID",
     storageBucket: "YOUR_PROJECT.firebasestorage.app",
     messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID",
-  },
+    appId: "YOUR_APP_ID"
+  }
 };
+'@ | Set-Content src/environments/environment.local.ts
 ```
 
 This project automatically merges the local file over the safe placeholder values in `src/environments/environment.ts`.

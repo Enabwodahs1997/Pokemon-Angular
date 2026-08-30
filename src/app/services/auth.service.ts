@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = getAuth();
-  user$ = new BehaviorSubject<any>(null);
+  user$ = new BehaviorSubject<any>(this.auth.currentUser ?? null);
 
   constructor(private router: Router) {
     onAuthStateChanged(this.auth, user => {
