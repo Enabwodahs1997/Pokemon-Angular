@@ -1,0 +1,62 @@
+export type CardType = 'pokemon' | 'trainer' | 'energy';
+export type CardElement = 'fire' | 'water' | 'grass' | 'lightning' | 'psychic' | 'fighting' | 'dark' | 'metal' | 'fairy' | 'dragon' | 'normal';
+export type DeckFormat = 'custom' | 'standard' | 'expanded';
+
+export interface Attack {
+  name: string;
+  cost: CardElement[];
+  damage: number;
+  description: string;
+}
+
+export interface PokemonCard {
+  id?: string;
+  cardType: 'pokemon';
+  name: string;
+  hp: number;
+  element: CardElement;
+  stage: 'basic' | 'stage1' | 'stage2';
+  evolvesFrom?: string;
+  attacks: Attack[];
+  weakness?: { type: CardElement; value: string };
+  retreatCost?: number;
+  imageUrl?: string;
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  description?: string;
+  createdAt?: string;
+}
+
+export interface TrainerCard {
+  id?: string;
+  cardType: 'trainer';
+  name: string;
+  trainerType: 'item' | 'supporter' | 'stadium';
+  effect: string;
+  cost?: CardElement[];
+  description?: string;
+  imageUrl?: string;
+  createdAt?: string;
+}
+
+export interface EnergyCard {
+  id?: string;
+  cardType: 'energy';
+  name: string;
+  element: CardElement;
+  description?: string;
+  imageUrl?: string;
+  createdAt?: string;
+}
+
+export type Card = PokemonCard | TrainerCard | EnergyCard;
+
+export interface Deck {
+  id?: string;
+  name: string;
+  description?: string;
+  format: DeckFormat;
+  createdAt?: string;
+  updatedAt?: string;
+  cardCount?: number;
+  isPublic?: boolean;
+}
