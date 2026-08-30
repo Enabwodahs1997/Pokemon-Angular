@@ -73,6 +73,13 @@ export interface Deck {
   isPublic?: boolean;
 }
 
+export interface Move {
+  name: string;
+  element: CardElement;
+  damage: number;
+  description: string;
+}
+
 export interface BoardPokemon {
   id: string;
   name: string;
@@ -80,13 +87,24 @@ export interface BoardPokemon {
   maxHp: number;
   element: CardElement;
   attackPower: number;
+  energyAttached: number;
+  moves: Move[];
+  weakness?: { type: CardElement; value: number };
+  resistance?: { type: CardElement; value: number };
   isDefeated: boolean;
 }
 
+export interface BattleSideState {
+  active: BoardPokemon | null;
+  bench: BoardPokemon[];
+  trainerEffects: string[];
+}
+
 export interface BattleState {
-  player: BoardPokemon[];
-  opponent: BoardPokemon[];
+  player: BattleSideState;
+  opponent: BattleSideState;
   currentTurn: number;
+  phase: 'start' | 'main' | 'attack' | 'end';
   winner: 'player' | 'opponent' | 'draw' | null;
   log: string[];
 }
