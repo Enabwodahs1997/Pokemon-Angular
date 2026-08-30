@@ -178,12 +178,16 @@ export class HomeComponent {
     private library: CardLibraryService,
     private battleService: BattleService
   ) {
-    this.libraryCards = this.library.getAll();
+    this.loadLibraryCards();
     this.auth.user$.subscribe(user => {
       if (user) {
         this.loadDecks(user.uid);
       }
     });
+  }
+
+  private async loadLibraryCards() {
+    this.libraryCards = await this.library.getAll();
   }
 
   resetDeckForm() {
@@ -241,7 +245,7 @@ export class HomeComponent {
   }
 
   async searchCards() {
-    this.libraryCards = this.searchText.trim() ? this.library.search(this.searchText) : this.library.getAll();
+    this.libraryCards = this.searchText.trim() ? await this.library.search(this.searchText) : await this.library.getAll();
   }
 
   async addCardToSelectedDeck(cardTemplate: CardTemplate) {
@@ -251,24 +255,42 @@ export class HomeComponent {
       return;
     }
 
-    const card: Card = {
+    const cardBase: any = {
       cardType: cardTemplate.cardType,
       name: cardTemplate.name,
-      hp: cardTemplate.hp || 50,
-      element: cardTemplate.element,
-      stage: 'basic',
-      attacks: cardTemplate.attackNames?.map((name, index) => ({
-        name,
-        cost: [cardTemplate.element],
-        damage: cardTemplate.power || 10 + index * 5,
-        description: `${name} attack.`
-      })) || [],
       description: cardTemplate.description,
-      rarity: cardTemplate.rarity,
-      trainerType: cardTemplate.cardType === 'trainer' ? 'item' : undefined,
-      effect: cardTemplate.description || '',
-      ...(cardTemplate.cardType === 'energy' ? { element: cardTemplate.element } : {})
-    } as Card;
+      rarity: cardTemplate.rarity
+    };
+
+    if (cardTemplate.cardType === 'pokemon') {
+      Object.assign(cardBase, {
+        hp: cardTemplate.hp || 50,
+        element: cardTemplate.element,
+        stage: 'basic',
+        attacks: cardTemplate.attackNames?.map((name, index) => ({
+          name,
+          cost: [cardTemplate.element],
+          damage: cardTemplate.power || 10 + index * 5,
+          description: `${name} attack.`
+        })) || []
+      });
+    }
+
+    if (cardTemplate.cardType === 'trainer') {
+      Object.assign(cardBase, {
+        trainerType: 'item',
+        effect: cardTemplate.description || ''
+      });
+    }
+
+    if (cardTemplate.cardType === 'energy') {
+      Object.assign(cardBase, {
+        element: cardTemplate.element,
+        effect: cardTemplate.description || ''
+      });
+    }
+
+    const card: Card = cardBase as Card;
 
     try {
       await this.deckBuilder.addCardToDeck(user.uid, this.selectedDeckId, card);

@@ -13,6 +13,25 @@ import {
 } from 'firebase/firestore';
 import { Card, Deck } from '../models/card.model';
 
+function sanitizeForFirestore(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(item => sanitizeForFirestore(item)).filter(item => item !== undefined);
+  }
+
+  if (value && typeof value === 'object') {
+    const sanitized: Record<string, any> = {};
+    Object.entries(value).forEach(([key, entryValue]) => {
+      const cleaned = sanitizeForFirestore(entryValue);
+      if (cleaned !== undefined) {
+        sanitized[key] = cleaned;
+      }
+    });
+    return sanitized;
+  }
+
+  return value;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DeckBuilderService {
   private db = getFirestore();
@@ -27,13 +46,14 @@ export class DeckBuilderService {
 
   async createDeck(uid: string, deck: Omit<Deck, 'id' | 'createdAt' | 'updatedAt' | 'cardCount'>) {
     const ref = collection(this.db, this.deckPath(uid));
-    return addDoc(ref, {
+    const payload = sanitizeForFirestore({
       ...deck,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       cardCount: 0,
       isPublic: false
     });
+    return addDoc(ref, payload);
   }
 
   async updateDeck(uid: string, deckId: string, update: Partial<Deck>) {
@@ -47,10 +67,11 @@ export class DeckBuilderService {
 
   async addCardToDeck(uid: string, deckId: string, card: Card) {
     const ref = collection(this.db, this.cardPath(uid, deckId));
-    const created = await addDoc(ref, {
+    const payload = sanitizeForFirestore({
       ...card,
       createdAt: new Date().toISOString()
     });
+    const created = await addDoc(ref, payload);
 
     const deckRef = doc(this.db, this.deckPath(uid), deckId);
     const deckSnap = await getDoc(deckRef);
