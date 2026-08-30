@@ -78,6 +78,7 @@ export interface Move {
   element: CardElement;
   damage: number;
   description: string;
+  cost: CardElement[];
 }
 
 export interface BoardPokemon {
@@ -100,11 +101,32 @@ export interface BattleSideState {
   trainerEffects: string[];
 }
 
+export interface TurnActionState {
+  maxAttacks: number;
+  attacksUsed: number;
+  maxEnergy: number;
+  energyUsed: number;
+  maxTrainer: number;
+  trainerUsed: number;
+  maxSwaps: number;
+  swapsUsed: number;
+  hasEndedTurn: boolean;
+}
+
+export interface BattleLogEntry {
+  message: string;
+  type: 'info' | 'attack' | 'heal' | 'status' | 'swap' | 'turn' | 'faint';
+  side?: 'player' | 'opponent';
+  damage?: number;
+}
+
 export interface BattleState {
   player: BattleSideState;
   opponent: BattleSideState;
   currentTurn: number;
+  turnOwner: 'player' | 'opponent';
   phase: 'start' | 'main' | 'attack' | 'end';
+  turnActions: TurnActionState;
   winner: 'player' | 'opponent' | 'draw' | null;
-  log: string[];
+  log: BattleLogEntry[];
 }

@@ -61,7 +61,12 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
 
     <section *ngIf="battleState" style="margin-top: 24px;">
       <h2>Battle Board</h2>
-      <p>Turn: {{ battleState.currentTurn }} | Phase: {{ battleState.phase }} | Winner: {{ battleState.winner || 'ongoing' }}</p>
+      <p>Turn: {{ battleState.currentTurn }} | Turn owner: {{ battleState.turnOwner }} | Phase: {{ battleState.phase }} | Winner: {{ battleState.winner || 'ongoing' }}</p>
+      <p>Actions this turn: attacks {{ battleState.turnActions.attacksUsed }}/{{ battleState.turnActions.maxAttacks }} | energy {{ battleState.turnActions.energyUsed }}/{{ battleState.turnActions.maxEnergy }} | trainer {{ battleState.turnActions.trainerUsed }}/{{ battleState.turnActions.maxTrainer }} | swaps {{ battleState.turnActions.swapsUsed }}/{{ battleState.turnActions.maxSwaps }}</p>
+
+      <div *ngIf="floatingDamage.length" style="position:relative; height: 70px; margin-bottom: 8px;">
+        <div *ngFor="let effect of floatingDamage" class="damage-bubble" [ngClass]="effect.side === 'player' ? 'player-damage' : 'opponent-damage'" style="position:absolute; top:{{ 12 + (floatingDamage.indexOf(effect) * 18) }}px; left:{{ effect.side === 'player' ? 10 : 70 }}%;">-{{ effect.damage }}</div>
+      </div>
 
       <div style="display:flex; justify-content:space-between; gap: 16px; margin-bottom: 16px;">
         <div style="flex:1; padding:12px; border:1px solid #333; border-radius:8px; background:#f0f0f0;">
@@ -72,8 +77,8 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
             <div>Element: {{ mon?.element || '-' }}</div>
             <div>Energy: {{ mon?.energyAttached || 0 }}</div>
             <div *ngIf="mon">
-              <button *ngFor="let move of mon.moves" type="button" (click)="attackWithMove('player', move.name)">
-                {{ move.name }} ({{ move.damage }})
+              <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('player', move.name)" (click)="attackWithMove('player', move.name)">
+                {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
               </button>
             </div>
           </div>
@@ -81,7 +86,7 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
           <div *ngFor="let mon of battleState.player.bench" style="border:1px solid #666; padding:8px; margin:4px 0; border-radius:6px;">
             <strong>{{ mon.name }}</strong>
             <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
-            <button type="button" (click)="swapActive('player', mon.id)">Swap in</button>
+            <button type="button" [disabled]="!canSwap('player', mon.id)" (click)="swapActive('player', mon.id)">Swap in</button>
           </div>
         </div>
 
@@ -93,8 +98,8 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
             <div>Element: {{ mon?.element || '-' }}</div>
             <div>Energy: {{ mon?.energyAttached || 0 }}</div>
             <div *ngIf="mon">
-              <button *ngFor="let move of mon.moves" type="button" (click)="attackWithMove('opponent', move.name)">
-                {{ move.name }} ({{ move.damage }})
+              <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('opponent', move.name)" (click)="attackWithMove('opponent', move.name)">
+                {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
               </button>
             </div>
           </div>
@@ -102,21 +107,26 @@ import { Card, Deck, CardTemplate, BattleState, BoardPokemon } from '../models/c
           <div *ngFor="let mon of battleState.opponent.bench" style="border:1px solid #666; padding:8px; margin:4px 0; border-radius:6px;">
             <strong>{{ mon.name }}</strong>
             <div>{{ mon.hp }}/{{ mon.maxHp }} HP</div>
-            <button type="button" (click)="swapActive('opponent', mon.id)">Swap in</button>
+            <button type="button" [disabled]="!canSwap('opponent', mon.id)" (click)="swapActive('opponent', mon.id)">Swap in</button>
           </div>
         </div>
       </div>
 
       <div style="margin: 12px 0;">
-        <button type="button" (click)="startPlayerTurn()">Start turn</button>
+        <button type="button" (click)="startPlayerTurn()">Start player turn</button>
+        <button type="button" (click)="startOpponentTurn()">Start opponent turn</button>
         <button type="button" (click)="attachEnergy('player')">Attach energy</button>
         <button type="button" (click)="playTrainer('player')">Play trainer</button>
         <button type="button" (click)="opponentTurn()">Opponent attack</button>
         <button type="button" (click)="endTurn()">End turn</button>
       </div>
 
-      <ul>
-        <li *ngFor="let entry of battleState.log">{{ entry }}</li>
+      <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+        <li *ngFor="let entry of battleState.log" style="padding:10px 12px; border-radius:10px; background:#f4f4f4; border-left: 4px solid #777; display:flex; align-items:center; gap:8px;">
+          <span style="font-size: 11px; text-transform:uppercase; font-weight:bold; padding:4px 6px; border-radius:999px; background:#dfeafc; color:#21429d;">{{ entry.type }}</span>
+          <span>{{ entry.message }}</span>
+          <span *ngIf="entry.damage" style="margin-left:auto; color:#d62828; font-weight:bold;">-{{ entry.damage }}</span>
+        </li>
       </ul>
     </section>
   `
@@ -132,6 +142,17 @@ export class HomeComponent {
   libraryCards: CardTemplate[] = [];
   deckCards: Card[] = [];
   battleState: BattleState | null = null;
+
+  get floatingDamage() {
+    if (!this.battleState) {
+      return [];
+    }
+
+    return this.battleState.log
+      .filter(entry => typeof entry.damage === 'number' && entry.damage! > 0)
+      .slice(-4)
+      .reverse();
+  }
 
   constructor(
     private auth: AuthService,
@@ -246,6 +267,29 @@ export class HomeComponent {
     }
   }
 
+  canUseMove(side: 'player' | 'opponent', moveName: string): boolean {
+    if (!this.battleState) {
+      return false;
+    }
+
+    const active = side === 'player' ? this.battleState.player.active : this.battleState.opponent.active;
+    const move = active?.moves.find(item => item.name === moveName) || null;
+    const isTurnOwner = this.battleState.turnOwner === side;
+    const hasAttackAvailable = this.battleState.turnActions.attacksUsed < this.battleState.turnActions.maxAttacks;
+    return isTurnOwner && hasAttackAvailable && this.battleService.canUseMove(active, move) && this.battleState.phase !== 'end';
+  }
+
+  canSwap(side: 'player' | 'opponent', benchId: string): boolean {
+    if (!this.battleState) {
+      return false;
+    }
+
+    const bench = side === 'player' ? this.battleState.player.bench : this.battleState.opponent.bench;
+    const isTurnOwner = this.battleState.turnOwner === side;
+    const hasSwapAvailable = this.battleState.turnActions.swapsUsed < this.battleState.turnActions.maxSwaps;
+    return isTurnOwner && hasSwapAvailable && this.battleState.phase === 'main' && bench.some(monster => monster.id === benchId);
+  }
+
   async loadDecks(uid: string) {
     this.decks = await this.deckBuilder.listDecks(uid);
     if (this.selectedDeckId && !this.decks.some(deck => deck.id === this.selectedDeckId)) {
@@ -267,7 +311,12 @@ export class HomeComponent {
 
   startPlayerTurn() {
     if (!this.battleState) return;
-    this.battleState = this.battleService.startTurn(this.battleState);
+    this.battleState = this.battleService.startTurn(this.battleState, 'player');
+  }
+
+  startOpponentTurn() {
+    if (!this.battleState) return;
+    this.battleState = this.battleService.startTurn(this.battleState, 'opponent');
   }
 
   attachEnergy(side: 'player' | 'opponent') {
@@ -294,16 +343,12 @@ export class HomeComponent {
     if (!this.battleState) return;
     const move = this.battleState.opponent.active?.moves[0];
     if (!move) return;
+    this.battleState = this.battleService.startTurn(this.battleState, 'opponent');
     this.battleState = this.battleService.attackWithMove(this.battleState, 'opponent', move.name);
   }
 
   endTurn() {
     if (!this.battleState) return;
-    this.battleState = {
-      ...this.battleState,
-      phase: 'end',
-      currentTurn: this.battleState.currentTurn + 1,
-      log: [...this.battleState.log, `End of turn ${this.battleState.currentTurn}.`]
-    };
+    this.battleState = this.battleService.endTurn(this.battleState, this.battleState.turnOwner);
   }
 }
