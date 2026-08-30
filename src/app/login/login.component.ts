@@ -68,7 +68,8 @@ export class LoginComponent {
         await this.auth.sendVerificationEmail();
         return;
       }
-      this.router.navigate(['/']);
+
+      await this.router.navigateByUrl('/');
     } catch (e: any) {
       this.error = e.message || 'Login failed';
     }

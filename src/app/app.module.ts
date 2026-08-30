@@ -12,6 +12,7 @@ import { HomeComponent } from './home/home.component';
 import { ProfileComponent } from './profile/profile.component';
 import { environment } from '../environments/environment';
 import { AuthGuard } from './guards/auth.guard';
+import { LoginGuard } from './guards/login.guard';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, HomeComponent, RegisterComponent, ProfileComponent],
@@ -21,7 +22,7 @@ import { AuthGuard } from './guards/auth.guard';
     ReactiveFormsModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, canActivate: [AuthGuard] },
-      { path: 'login', component: LoginComponent },
+      { path: 'login', component: LoginComponent, canActivate: [LoginGuard] },
       { path: 'register', component: RegisterComponent },
       { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }
     ])
