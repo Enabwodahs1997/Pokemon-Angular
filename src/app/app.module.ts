@@ -10,6 +10,7 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { HomeComponent } from './home/home.component';
+import { BattleBoardComponent } from './battle-board/battle-board.component';
 import { ProfileComponent } from './profile/profile.component';
 import { environment as baseEnvironment } from '../environments/environment';
 import { environment as localEnvironment } from '../environments/environment.local';
@@ -26,14 +27,16 @@ const environment = {
 };
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, RegisterComponent, ProfileComponent],
+  declarations: [AppComponent, LoginComponent, HomeComponent, BattleBoardComponent, RegisterComponent, ProfileComponent],
   imports: [
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
     RouterModule.forRoot([
-      { path: '', component: HomeComponent, canActivate: [AuthGuard] },
+      { path: '', redirectTo: 'deck-lab', pathMatch: 'full' },
+      { path: 'deck-lab', component: HomeComponent, canActivate: [AuthGuard] },
+      { path: 'battle-board', component: BattleBoardComponent, canActivate: [AuthGuard] },
       { path: 'login', component: LoginComponent, canActivate: [LoginGuard] },
       { path: 'register', component: RegisterComponent },
       { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] }

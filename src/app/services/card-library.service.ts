@@ -7,12 +7,21 @@ const POKEMON_TCG_API_URL = 'https://api.pokemontcg.io/v2';
 
 @Injectable({ providedIn: 'root' })
 export class CardLibraryService {
+  private readonly fallbackImageUrls: Record<string, string> = {
+    pikachu: 'https://images.pokemontcg.io/base1/58.png',
+    bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
+    charmander: 'https://images.pokemontcg.io/base1/46.png',
+    squirtle: 'https://images.pokemontcg.io/base1/63.png',
+    mewtwo: 'https://images.pokemontcg.io/base1/10.png'
+  };
+
   private library: CardTemplate[] = [
     {
       id: 'pikachu-basic',
       name: 'Pikachu',
       cardType: 'pokemon',
       element: 'lightning',
+      imageUrl: 'https://images.pokemontcg.io/base1/58.png',
       hp: 60,
       description: 'Fast electric attacker.',
       attackNames: ['Quick Attack', 'Thunder Shock'],
@@ -24,6 +33,7 @@ export class CardLibraryService {
       name: 'Bulbasaur',
       cardType: 'pokemon',
       element: 'grass',
+      imageUrl: 'https://images.pokemontcg.io/base1/44.png',
       hp: 70,
       description: 'Steady grass starter.',
       attackNames: ['Vine Whip', 'Razor Leaf'],
@@ -35,6 +45,7 @@ export class CardLibraryService {
       name: 'Charmander',
       cardType: 'pokemon',
       element: 'fire',
+      imageUrl: 'https://images.pokemontcg.io/base1/46.png',
       hp: 60,
       description: 'Explosive fire attacker.',
       attackNames: ['Flame Burst', 'Ember'],
@@ -46,6 +57,7 @@ export class CardLibraryService {
       name: 'Squirtle',
       cardType: 'pokemon',
       element: 'water',
+      imageUrl: 'https://images.pokemontcg.io/base1/63.png',
       hp: 70,
       description: 'Tough water defender.',
       attackNames: ['Bubble Shot', 'Water Pulse'],
@@ -57,6 +69,7 @@ export class CardLibraryService {
       name: 'Mewtwo',
       cardType: 'pokemon',
       element: 'psychic',
+      imageUrl: 'https://images.pokemontcg.io/base1/10.png',
       hp: 120,
       description: 'Legendary psychic powerhouse.',
       attackNames: ['Psychic Burst', 'Future Sight'],
@@ -111,6 +124,7 @@ export class CardLibraryService {
     const cardType = this.normalizeCardType(card.supertype);
     const name = card.name || 'Unknown Card';
     const description = card.flavorText || card.text?.join(' ') || '';
+    const imageUrl = card.images?.large || card.images?.small;
 
     if (cardType === 'pokemon') {
       return {
@@ -118,6 +132,7 @@ export class CardLibraryService {
         name,
         cardType,
         element: this.normalizeElement(card.types?.[0]),
+        imageUrl,
         hp: Number(card.hp || 0),
         description,
         attackNames: (card.attacks || []).map((attack: any) => attack.name),
@@ -132,6 +147,7 @@ export class CardLibraryService {
         name,
         cardType,
         element: this.normalizeElement(card.types?.[0] || 'normal'),
+        imageUrl,
         description,
         power: 0,
         rarity: this.normalizeRarity(card.rarity)
@@ -143,6 +159,7 @@ export class CardLibraryService {
       name,
       cardType,
       element: this.normalizeElement(card.types?.[0] || 'normal'),
+      imageUrl,
       description,
       power: 0,
       rarity: this.normalizeRarity(card.rarity)
@@ -204,5 +221,26 @@ export class CardLibraryService {
 
   getById(id: string) {
     return this.library.find(card => card.id === id) || null;
+  }
+
+  async getImageForName(name: string) {
+    const normalizedName = name.trim().toLowerCase();
+    const fallbackName = Object.keys(this.fallbackImageUrls).find(key => normalizedName.includes(key));
+    const fallbackImage = fallbackName ? this.fallbackImageUrls[fallbackName] : undefined;
+    if (fallbackImage) {
+      return fallbackImage;
+    }
+
+    const localMatch = this.library.find(card => card.name.toLowerCase() === normalizedName);
+    if (localMatch?.imageUrl) {
+      return localMatch.imageUrl;
+    }
+
+    try {
+      const matches = await this.search(name);
+      return matches.find(card => card.name.toLowerCase() === normalizedName)?.imageUrl;
+    } catch {
+      return undefined;
+    }
   }
 }

@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import {
   getAuth,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  User
 } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
@@ -14,16 +17,24 @@ import { Router } from '@angular/router';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = getAuth();
-  user$ = new BehaviorSubject<any>(this.auth.currentUser ?? null);
-
-  constructor(private router: Router) {
+  user$ = new BehaviorSubject<User | null | undefined>(undefined);
+  private authReady = new Promise<void>(resolve => {
     onAuthStateChanged(this.auth, user => {
       this.user$.next(user);
+      resolve();
     });
-  }
+  });
+
+  constructor(private router: Router) {}
 
   async signIn(email: string, password: string) {
     const result = await signInWithEmailAndPassword(this.auth, email, password);
+    this.user$.next(result.user);
+    return result;
+  }
+
+  async signInWithGoogle() {
+    const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
     this.user$.next(result.user);
     return result;
   }
@@ -53,6 +64,6 @@ export class AuthService {
   }
 
   get currentUser() {
-    return this.user$.value;
+    return this.user$.value ?? null;
   }
 }

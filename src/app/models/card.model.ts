@@ -55,6 +55,7 @@ export interface CardTemplate {
   name: string;
   cardType: CardType;
   element: CardElement;
+  imageUrl?: string;
   hp?: number;
   description?: string;
   attackNames?: string[];
@@ -93,6 +94,7 @@ export interface BoardPokemon {
   weakness?: { type: CardElement; value: number };
   resistance?: { type: CardElement; value: number };
   isDefeated: boolean;
+  imageUrl?: string;
 }
 
 export interface BattleSideState {

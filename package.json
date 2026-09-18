@@ -14,11 +14,11 @@
     "@angular/common": "^14.0.0",
     "@angular/compiler": "^14.0.0",
     "@angular/core": "^14.0.0",
+    "@angular/fire": "^7.0.0",
     "@angular/forms": "^14.0.0",
     "@angular/platform-browser": "^14.0.0",
     "@angular/platform-browser-dynamic": "^14.0.0",
     "@angular/router": "^14.0.0",
-    "@angular/fire": "^7.0.0",
     "firebase": "^9.0.0",
     "rxjs": "^6.5.0",
     "zone.js": "^0.11.4"
@@ -27,7 +27,12 @@
     "@angular-devkit/build-angular": "^14.0.0",
     "@angular/cli": "^14.0.0",
     "@angular/compiler-cli": "^14.0.0",
+    "@types/jasmine": "^4.6.6",
     "@types/node": "^18.19.0",
+    "jasmine-core": "^4.6.1",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-jasmine": "^5.1.0",
     "typescript": "~4.8.4"
   }
 }

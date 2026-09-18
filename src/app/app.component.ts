@@ -12,7 +12,8 @@ import { AuthService } from './services/auth.service';
         </div>
 
         <nav class="pokemon-nav" aria-label="Main navigation">
-          <a routerLink="/" class="nav-link">Home</a>
+          <a routerLink="/deck-lab" class="nav-link">Deck Lab</a>
+          <a routerLink="/battle-board" class="nav-link">Battle Board</a>
           <a routerLink="/profile" *ngIf="auth.currentUser" class="nav-link">Profile</a>
           <a routerLink="/login" *ngIf="!(auth.user$ | async)" class="nav-link">Login</a>
 

@@ -1,8 +1,25 @@
 import { Injectable } from '@angular/core';
-import { BattleState, BattleSideState, BoardPokemon, BattleLogEntry, CardElement, Move, TurnActionState } from '../models/card.model';
+import { BattleState, BattleSideState, BoardPokemon, BattleLogEntry, Card, CardElement, Move, TurnActionState } from '../models/card.model';
 
 @Injectable({ providedIn: 'root' })
 export class BattleService {
+  private readonly fallbackImages: Record<string, string> = {
+    pikachu: 'https://images.pokemontcg.io/base1/58.png',
+    bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
+    charmander: 'https://images.pokemontcg.io/base1/46.png',
+    squirtle: 'https://images.pokemontcg.io/base1/63.png'
+  };
+
+  private imageForCard(card: Extract<Card, { cardType: 'pokemon' }> | undefined, fallbackName: string) {
+    if (card?.imageUrl) {
+      return card.imageUrl;
+    }
+
+    const name = (card?.name || fallbackName).toLowerCase();
+    const match = Object.keys(this.fallbackImages).find(key => name.includes(key));
+    return match ? this.fallbackImages[match] : this.fallbackImages[fallbackName.toLowerCase()];
+  }
+
   private createLogEntry(message: string, type: BattleLogEntry['type'], side?: 'player' | 'opponent', damage?: number): BattleLogEntry {
     return { message, type, side, damage };
   }
@@ -32,7 +49,8 @@ export class BattleService {
     element: CardElement,
     attackPower: number,
     moves: Move[],
-    energyAttached = 0
+    energyAttached = 0,
+    imageUrl?: string
   ): BoardPokemon {
     return {
       id,
@@ -45,7 +63,8 @@ export class BattleService {
       moves,
       weakness: this.getWeakness(element),
       resistance: this.getResistance(element),
-      isDefeated: false
+      isDefeated: false,
+      imageUrl
     };
   }
 
@@ -83,16 +102,19 @@ export class BattleService {
     return map[element] || undefined;
   }
 
-  createInitialBattle(): BattleState {
+  createInitialBattle(playerCards: Card[] = []): BattleState {
+    const pokemonCards = playerCards.filter(card => card.cardType === 'pokemon') as Extract<Card, { cardType: 'pokemon' }>[];
+    const activeCard = pokemonCards[0];
+    const benchCard = pokemonCards[1];
     const player: BattleSideState = {
-      active: this.createMon('p1', 'Pikachu', 60, 'lightning', 20, [
+      active: this.createMon('p1', activeCard?.name || 'Pikachu', activeCard?.hp || 60, activeCard?.element || 'lightning', activeCard?.attacks?.[0]?.damage || 20, [
         this.createMove('Quick Attack', 'lightning', 20, 'A fast electric strike.', ['lightning']),
         this.createMove('Thunderbolt', 'lightning', 35, 'A powerful electric blast.', ['lightning', 'lightning'])
-      ], 2),
-      bench: [this.createMon('p2', 'Bulbasaur', 70, 'grass', 18, [
+      ], 2, this.imageForCard(activeCard, 'Pikachu')),
+      bench: [this.createMon('p2', benchCard?.name || 'Bulbasaur', benchCard?.hp || 70, benchCard?.element || 'grass', benchCard?.attacks?.[0]?.damage || 18, [
         this.createMove('Vine Whip', 'grass', 18, 'A whipping vine strike.', ['grass']),
         this.createMove('Solar Beam', 'grass', 30, 'A beam of solar energy.', ['grass', 'grass'])
-      ], 2)],
+      ], 2, this.imageForCard(benchCard, 'Bulbasaur'))],
       trainerEffects: []
     };
 
@@ -100,11 +122,11 @@ export class BattleService {
       active: this.createMon('o1', 'Charmander', 60, 'fire', 22, [
         this.createMove('Ember', 'fire', 22, 'A small but intense flame.', ['fire']),
         this.createMove('Flare Blitz', 'fire', 38, 'A heavy fire charge.', ['fire', 'fire'])
-      ], 2),
+      ], 2, 'https://images.pokemontcg.io/base1/46.png'),
       bench: [this.createMon('o2', 'Squirtle', 70, 'water', 19, [
         this.createMove('Bubble Pulse', 'water', 20, 'A harmless-looking burst.', ['water']),
         this.createMove('Surf', 'water', 32, 'A crushing wave.', ['water', 'water'])
-      ], 2)],
+      ], 2, 'https://images.pokemontcg.io/base1/63.png')],
       trainerEffects: []
     };
 

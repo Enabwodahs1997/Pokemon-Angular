@@ -31,6 +31,8 @@ import { Router } from '@angular/router';
           <button type="submit" class="primary-btn">Log in</button>
         </form>
 
+        <button type="button" class="secondary-btn" (click)="loginWithGoogle()">Continue with Google</button>
+
         <div class="message-block">
           <p *ngIf="error" class="error-text">{{ error }}</p>
           <p *ngIf="success" class="success-text">{{ success }}</p>
@@ -66,6 +68,17 @@ export class LoginComponent {
       await this.router.navigateByUrl('/', { replaceUrl: true });
     } catch (e: any) {
       this.error = e.message || 'Login failed';
+    }
+  }
+
+  async loginWithGoogle() {
+    this.error = '';
+    this.success = '';
+    try {
+      await this.auth.signInWithGoogle();
+      await this.router.navigateByUrl('/', { replaceUrl: true });
+    } catch (e: any) {
+      this.error = e.message || 'Google sign-in failed';
     }
   }
 
