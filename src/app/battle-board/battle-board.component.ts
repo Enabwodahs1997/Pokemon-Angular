@@ -67,7 +67,7 @@ import { BattleState, Card, Deck } from '../models/card.model';
               <div>Energy: {{ mon?.energyAttached || 0 }}</div>
               <div *ngIf="mon" class="pokemon-move-list">
                 <button *ngFor="let move of mon.moves" type="button" [disabled]="!canUseMove('player', move.name)" (click)="attackWithMove('player', move.name)">
-                  {{ move.name }} ({{ move.damage }}, cost {{ move.cost.length }})
+                  {{ move.name }} ({{ move.damageText || move.damage }} base, {{ getMoveDamage(mon, move) }} now, cost {{ move.cost.length }})
                 </button>
               </div>
             </div>
@@ -211,6 +211,11 @@ export class BattleBoardComponent {
     const active = side === 'player' ? this.battleState.player.active : this.battleState.opponent.active;
     const move = active?.moves.find(item => item.name === moveName) || null;
     return this.battleState.turnOwner === side && this.battleState.turnActions.attacksUsed < this.battleState.turnActions.maxAttacks && this.battleService.canUseMove(active, move) && this.battleState.phase !== 'end';
+  }
+
+  getMoveDamage(mon: { energyAttached: number }, move: { damage: number; cost: string[] }) {
+    const energyUsed = Math.min(mon.energyAttached, move.cost.length);
+    return move.damage + energyUsed * 2;
   }
 
   canSwap(side: 'player' | 'opponent', benchId: string) {

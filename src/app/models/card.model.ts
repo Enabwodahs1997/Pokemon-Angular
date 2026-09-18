@@ -6,6 +6,7 @@ export interface Attack {
   name: string;
   cost: CardElement[];
   damage: number;
+  damageText?: string;
   description: string;
 }
 
@@ -79,6 +80,7 @@ export interface Move {
   name: string;
   element: CardElement;
   damage: number;
+  damageText?: string;
   description: string;
   cost: CardElement[];
 }

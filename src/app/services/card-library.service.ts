@@ -149,6 +149,7 @@ export class CardLibraryService {
           name: attack.name || 'Attack',
           cost: (attack.cost || []).map((element: string) => this.normalizeAttackElement(element)),
           damage: this.normalizeAttackDamage(attack.damage),
+          damageText: attack.damage ? String(attack.damage) : undefined,
           description: attack.text?.join(' ') || `${attack.name || 'Attack'} attack.`
         })),
         power: Math.max(0, ...(card.attacks || []).map((attack: any) => Number(attack.damage?.replace(/[^0-9]/g, '') || 0))),

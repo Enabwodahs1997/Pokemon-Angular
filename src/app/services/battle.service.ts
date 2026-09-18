@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BattleState, BattleSideState, BoardPokemon, BattleLogEntry, Card, CardElement, Move, TurnActionState } from '../models/card.model';
 
+type OpponentPokemonDefinition = readonly [string, CardElement, number, number, string, number, string, number, string];
+
 @Injectable({ providedIn: 'root' })
 export class BattleService {
+  private lastOpponentDeck = -1;
   private readonly fallbackImages: Record<string, string> = {
     pikachu: 'https://images.pokemontcg.io/base1/58.png',
     bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
@@ -24,8 +27,8 @@ export class BattleService {
     return { message, type, side, damage };
   }
 
-  private createMove(name: string, element: CardElement, damage: number, description: string, cost: CardElement[] = []): Move {
-    return { name, element, damage, description, cost };
+  private createMove(name: string, element: CardElement, damage: number, description: string, cost: CardElement[] = [], damageText?: string): Move {
+    return { name, element, damage, description, cost, damageText };
   }
 
   private movesForCard(card: Extract<Card, { cardType: 'pokemon' }> | undefined, fallback: Move[]): Move[] {
@@ -38,8 +41,52 @@ export class BattleService {
       card.element,
       attack.damage,
       attack.description,
-      attack.cost
+      attack.cost,
+      attack.damageText
     ));
+  }
+
+  private createOpponentSide(): BattleSideState {
+    const opponentDecks: ReadonlyArray<{ active: OpponentPokemonDefinition; bench: OpponentPokemonDefinition }> = [
+      {
+        active: ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flare Blitz', 38, 'https://images.pokemontcg.io/base1/46.png'],
+        bench: ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png']
+      },
+      {
+        active: ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
+        bench: ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png']
+      },
+      {
+        active: ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
+        bench: ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
+      },
+      {
+        active: ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
+        bench: ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png']
+      }
+    ];
+
+    let deckIndex = Math.floor(Math.random() * opponentDecks.length);
+    if (opponentDecks.length > 1 && deckIndex === this.lastOpponentDeck) {
+      deckIndex = (deckIndex + 1) % opponentDecks.length;
+    }
+    this.lastOpponentDeck = deckIndex;
+
+    const selectedDeck = opponentDecks[deckIndex];
+    const createOpponentPokemon = (pokemon: typeof selectedDeck.active, id: string) => {
+      const [name, element, hp, attackPower, firstMove, firstDamage, secondMove, secondDamage, imageUrl] = pokemon;
+      const cardElement = element as CardElement;
+      return this.createMon(id, name, hp, cardElement, attackPower, [
+        this.createMove(firstMove, cardElement, firstDamage, `${firstMove} attack.`, [cardElement]),
+        this.createMove(secondMove, cardElement, secondDamage, `${secondMove} attack.`, [cardElement, cardElement])
+      ], 2, imageUrl);
+    };
+
+    return {
+      active: createOpponentPokemon(selectedDeck.active, 'o1'),
+      bench: [createOpponentPokemon(selectedDeck.bench, 'o2')],
+      trainerEffects: []
+    };
   }
 
   private createTurnActions(): TurnActionState {
@@ -138,17 +185,7 @@ export class BattleService {
       trainerEffects: []
     };
 
-    const opponent: BattleSideState = {
-      active: this.createMon('o1', 'Charmander', 60, 'fire', 22, [
-        this.createMove('Ember', 'fire', 22, 'A small but intense flame.', ['fire']),
-        this.createMove('Flare Blitz', 'fire', 38, 'A heavy fire charge.', ['fire', 'fire'])
-      ], 2, 'https://images.pokemontcg.io/base1/46.png'),
-      bench: [this.createMon('o2', 'Squirtle', 70, 'water', 19, [
-        this.createMove('Bubble Pulse', 'water', 20, 'A harmless-looking burst.', ['water']),
-        this.createMove('Surf', 'water', 32, 'A crushing wave.', ['water', 'water'])
-      ], 2, 'https://images.pokemontcg.io/base1/63.png')],
-      trainerEffects: []
-    };
+    const opponent = this.createOpponentSide();
 
     return {
       player,

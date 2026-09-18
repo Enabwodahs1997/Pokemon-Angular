@@ -39,6 +39,7 @@ describe('BattleService', () => {
 
     expect(battle.player.active?.moves[0].name).toBe('Thunder Jolt');
     expect(battle.player.active?.moves[0].damage).toBe(40);
+    expect(battle.player.active?.moves[0].damageText).toBeUndefined();
     expect(battle.player.active?.moves[0].description).toBe('A real card attack.');
   });
 });
