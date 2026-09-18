@@ -546,6 +546,38 @@ app-root {
   white-space: nowrap;
 }
 
+.battle-deck-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.battle-deck-picker label {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-deck-picker select {
+  min-width: 190px;
+  height: 38px;
+  padding: 0 10px;
+  border: 2px solid rgba(17, 51, 166, 0.16);
+  border-radius: 10px;
+  background: white;
+  color: var(--pokemon-text);
+  font: inherit;
+  font-weight: 700;
+}
+
+.battle-deck-picker select:focus-visible {
+  outline: 3px solid rgba(250, 204, 45, 0.85);
+  outline-offset: 2px;
+}
+
 .pokemon-form-row,
 .pokemon-search-row,
 .pokemon-select-row,
@@ -892,5 +924,14 @@ app-root {
 
   .pokemon-header-battle-btn {
     justify-content: center;
+  }
+
+  .battle-deck-picker {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .battle-deck-picker select {
+    width: 100%;
   }
 }

@@ -32,6 +32,13 @@ import { BattleState, Card, Deck } from '../models/card.model';
         <div class="battle-heading-row">
           <div>
             <h2>Battle Board</h2>
+            <div class="battle-deck-picker">
+              <label for="activeBattleDeck">Battle deck</label>
+              <select id="activeBattleDeck" [(ngModel)]="selectedDeckId" name="activeBattleDeck" (ngModelChange)="loadSelectedDeck()">
+                <option value="">Choose a deck...</option>
+                <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
+              </select>
+            </div>
             <p class="pokemon-battle-meta">Turn: {{ battleState.currentTurn }} | Turn owner: {{ battleState.turnOwner }} | Phase: {{ battleState.phase }} | Winner: {{ battleState.winner || 'ongoing' }}</p>
             <p class="pokemon-battle-meta">Actions: attacks {{ battleState.turnActions.attacksUsed }}/{{ battleState.turnActions.maxAttacks }} | energy {{ battleState.turnActions.energyUsed }}/{{ battleState.turnActions.maxEnergy }} | trainer {{ battleState.turnActions.trainerUsed }}/{{ battleState.turnActions.maxTrainer }} | swaps {{ battleState.turnActions.swapsUsed }}/{{ battleState.turnActions.maxSwaps }}</p>
           </div>
