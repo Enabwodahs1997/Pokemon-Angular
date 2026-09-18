@@ -28,6 +28,20 @@ export class BattleService {
     return { name, element, damage, description, cost };
   }
 
+  private movesForCard(card: Extract<Card, { cardType: 'pokemon' }> | undefined, fallback: Move[]): Move[] {
+    if (!card?.attacks?.length) {
+      return fallback;
+    }
+
+    return card.attacks.map(attack => this.createMove(
+      attack.name,
+      card.element,
+      attack.damage,
+      attack.description,
+      attack.cost
+    ));
+  }
+
   private createTurnActions(): TurnActionState {
     return {
       maxAttacks: 1,
@@ -106,14 +120,20 @@ export class BattleService {
     const pokemonCards = playerCards.filter(card => card.cardType === 'pokemon') as Extract<Card, { cardType: 'pokemon' }>[];
     const activeCard = pokemonCards[0];
     const benchCard = pokemonCards[1];
+    const playerFallbackMoves = [
+      this.createMove('Quick Attack', 'lightning', 20, 'A fast electric strike.', ['lightning']),
+      this.createMove('Thunderbolt', 'lightning', 35, 'A powerful electric blast.', ['lightning', 'lightning'])
+    ];
+    const benchFallbackMoves = [
+      this.createMove('Vine Whip', 'grass', 18, 'A whipping vine strike.', ['grass']),
+      this.createMove('Solar Beam', 'grass', 30, 'A beam of solar energy.', ['grass', 'grass'])
+    ];
     const player: BattleSideState = {
       active: this.createMon('p1', activeCard?.name || 'Pikachu', activeCard?.hp || 60, activeCard?.element || 'lightning', activeCard?.attacks?.[0]?.damage || 20, [
-        this.createMove('Quick Attack', 'lightning', 20, 'A fast electric strike.', ['lightning']),
-        this.createMove('Thunderbolt', 'lightning', 35, 'A powerful electric blast.', ['lightning', 'lightning'])
+        ...this.movesForCard(activeCard, playerFallbackMoves)
       ], 2, this.imageForCard(activeCard, 'Pikachu')),
       bench: [this.createMon('p2', benchCard?.name || 'Bulbasaur', benchCard?.hp || 70, benchCard?.element || 'grass', benchCard?.attacks?.[0]?.damage || 18, [
-        this.createMove('Vine Whip', 'grass', 18, 'A whipping vine strike.', ['grass']),
-        this.createMove('Solar Beam', 'grass', 30, 'A beam of solar energy.', ['grass', 'grass'])
+        ...this.movesForCard(benchCard, benchFallbackMoves)
       ], 2, this.imageForCard(benchCard, 'Bulbasaur'))],
       trainerEffects: []
     };

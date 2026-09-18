@@ -59,6 +59,7 @@ export interface CardTemplate {
   hp?: number;
   description?: string;
   attackNames?: string[];
+  attacks?: Attack[];
   power?: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 }

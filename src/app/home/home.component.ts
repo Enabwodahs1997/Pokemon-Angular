@@ -186,11 +186,13 @@ export class HomeComponent {
         element: cardTemplate.element,
         stage: 'basic',
         attacks: cardTemplate.attackNames?.map((name, index) => ({
-          name,
-          cost: [cardTemplate.element],
-          damage: cardTemplate.power || 10 + index * 5,
-          description: `${name} attack.`
-        })) || []
+          ...(cardTemplate.attacks?.[index] || {
+            name,
+            cost: [cardTemplate.element],
+            damage: cardTemplate.power || 10 + index * 5,
+            description: `${name} attack.`
+          })
+        })) || cardTemplate.attacks || []
       });
     }
 

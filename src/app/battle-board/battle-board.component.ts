@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth.service';
 import { BattleService } from '../services/battle.service';
 import { DeckBuilderService } from '../services/deck-builder.service';
 import { CardLibraryService } from '../services/card-library.service';
+import { FirestoreService } from '../services/firestore.service';
 import { BattleState, Card, Deck } from '../models/card.model';
 
 @Component({
@@ -124,6 +125,7 @@ export class BattleBoardComponent {
   battleState: BattleState | null = null;
   error = '';
   opponentThinking = false;
+  private battleResultRecorded = false;
 
   get floatingDamage() {
     return this.battleState?.log.filter(entry => typeof entry.damage === 'number' && entry.damage > 0).slice(-4).reverse() || [];
@@ -134,6 +136,7 @@ export class BattleBoardComponent {
     private deckBuilder: DeckBuilderService,
     private battleService: BattleService,
     private cardLibrary: CardLibraryService,
+    private firestore: FirestoreService,
     private route: ActivatedRoute,
     private router: Router
   ) {
@@ -171,6 +174,7 @@ export class BattleBoardComponent {
         imageUrl: card.imageUrl || await this.cardLibrary.getImageForName(card.name)
       })));
       this.battleState = this.battleService.startTurn(this.battleService.createInitialBattle(this.deckCards), 'player');
+      this.battleResultRecorded = false;
       this.error = '';
     } catch (e: any) {
       this.error = e.message || 'Unable to load that deck.';
@@ -188,6 +192,20 @@ export class BattleBoardComponent {
     this.router.navigate(['/deck-lab']);
   }
 
+  private recordBattleResultIfNeeded() {
+    if (!this.battleState?.winner || this.battleResultRecorded || this.battleState.winner === 'draw') {
+      return;
+    }
+
+    const user = this.auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    this.battleResultRecorded = true;
+    void this.firestore.recordBattleResult(user.uid, this.battleState.winner === 'player', 'CPU Trainer');
+  }
+
   canUseMove(side: 'player' | 'opponent', moveName: string) {
     if (!this.battleState) return false;
     const active = side === 'player' ? this.battleState.player.active : this.battleState.opponent.active;
@@ -203,7 +221,12 @@ export class BattleBoardComponent {
 
   attachEnergy(side: 'player' | 'opponent') { if (this.battleState) this.battleState = this.battleService.attachEnergy(this.battleState, side); }
   playTrainer(side: 'player' | 'opponent') { if (this.battleState) this.battleState = this.battleService.playTrainerCard(this.battleState, side); }
-  attackWithMove(side: 'player' | 'opponent', moveName: string) { if (this.battleState) this.battleState = this.battleService.attackWithMove(this.battleState, side, moveName); }
+  attackWithMove(side: 'player' | 'opponent', moveName: string) {
+    if (this.battleState) {
+      this.battleState = this.battleService.attackWithMove(this.battleState, side, moveName);
+      this.recordBattleResultIfNeeded();
+    }
+  }
   swapActive(side: 'player' | 'opponent', benchId: string) { if (this.battleState) this.battleState = this.battleService.swapActivePokemon(this.battleState, side, benchId); }
   async endTurn() {
     if (!this.battleState || this.opponentThinking || this.battleState.turnOwner !== 'player' || this.battleState.winner) {
@@ -220,6 +243,7 @@ export class BattleBoardComponent {
       const move = this.battleState.opponent.active?.moves[0];
       if (move) {
         this.battleState = this.battleService.attackWithMove(this.battleState, 'opponent', move.name);
+        this.recordBattleResultIfNeeded();
       }
     }
 
@@ -236,5 +260,6 @@ export class BattleBoardComponent {
     if (!move) return;
     this.battleState = this.battleService.startTurn(this.battleState, 'opponent');
     this.battleState = this.battleService.attackWithMove(this.battleState, 'opponent', move.name);
+    this.recordBattleResultIfNeeded();
   }
 }

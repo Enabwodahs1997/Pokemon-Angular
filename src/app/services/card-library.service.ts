@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { CardElement, CardTemplate, CardType } from '../models/card.model';
+import { Attack, CardElement, CardTemplate, CardType } from '../models/card.model';
 
 const POKEMON_TCG_API_KEY = 'c6d102fa-7c57-49bc-8efd-dbce0d244884';
 const POKEMON_TCG_API_URL = 'https://api.pokemontcg.io/v2';
@@ -120,6 +120,15 @@ export class CardLibraryService {
     return valid.includes(normalized as any) ? normalized as any : 'common';
   }
 
+  private normalizeAttackElement(value?: string): CardElement {
+    return this.normalizeElement(value === 'Colorless' ? 'normal' : value);
+  }
+
+  private normalizeAttackDamage(value?: string | number) {
+    const damage = Number(String(value || '0').replace(/[^0-9]/g, ''));
+    return damage || 10;
+  }
+
   private mapApiCard(card: any): CardTemplate | null {
     const cardType = this.normalizeCardType(card.supertype);
     const name = card.name || 'Unknown Card';
@@ -136,6 +145,12 @@ export class CardLibraryService {
         hp: Number(card.hp || 0),
         description,
         attackNames: (card.attacks || []).map((attack: any) => attack.name),
+        attacks: (card.attacks || []).map((attack: any): Attack => ({
+          name: attack.name || 'Attack',
+          cost: (attack.cost || []).map((element: string) => this.normalizeAttackElement(element)),
+          damage: this.normalizeAttackDamage(attack.damage),
+          description: attack.text?.join(' ') || `${attack.name || 'Attack'} attack.`
+        })),
         power: Math.max(0, ...(card.attacks || []).map((attack: any) => Number(attack.damage?.replace(/[^0-9]/g, '') || 0))),
         rarity: this.normalizeRarity(card.rarity)
       };
