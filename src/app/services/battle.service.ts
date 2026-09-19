@@ -47,22 +47,42 @@ export class BattleService {
   }
 
   private createOpponentSide(): BattleSideState {
-    const opponentDecks: ReadonlyArray<{ active: OpponentPokemonDefinition; bench: OpponentPokemonDefinition }> = [
+    const opponentDecks: ReadonlyArray<{ pokemon: OpponentPokemonDefinition[] }> = [
       {
-        active: ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flare Blitz', 38, 'https://images.pokemontcg.io/base1/46.png'],
-        bench: ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png']
+        pokemon: [
+          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flare Blitz', 38, 'https://images.pokemontcg.io/base1/46.png'],
+          ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png'],
+          ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
+          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
+          ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
+        ]
       },
       {
-        active: ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
-        bench: ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png']
+        pokemon: [
+          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
+          ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png'],
+          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
+          ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
+          ['Mewtwo', 'psychic', 80, 28, 'Confusion', 25, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
+        ]
       },
       {
-        active: ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
-        bench: ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
+        pokemon: [
+          ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
+          ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png'],
+          ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png'],
+          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
+          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Solar Beam', 30, 'https://images.pokemontcg.io/base1/44.png']
+        ]
       },
       {
-        active: ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
-        bench: ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png']
+        pokemon: [
+          ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
+          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
+          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
+          ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png'],
+          ['Mewtwo', 'psychic', 80, 28, 'Confusion', 25, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
+        ]
       }
     ];
 
@@ -73,7 +93,8 @@ export class BattleService {
     this.lastOpponentDeck = deckIndex;
 
     const selectedDeck = opponentDecks[deckIndex];
-    const createOpponentPokemon = (pokemon: typeof selectedDeck.active, id: string) => {
+    const drawnPokemon = [...selectedDeck.pokemon].sort(() => Math.random() - 0.5).slice(0, 5);
+    const createOpponentPokemon = (pokemon: OpponentPokemonDefinition, id: string) => {
       const [name, element, hp, attackPower, firstMove, firstDamage, secondMove, secondDamage, imageUrl] = pokemon;
       const cardElement = element as CardElement;
       return this.createMon(id, name, hp, cardElement, attackPower, [
@@ -83,8 +104,42 @@ export class BattleService {
     };
 
     return {
-      active: createOpponentPokemon(selectedDeck.active, 'o1'),
-      bench: [createOpponentPokemon(selectedDeck.bench, 'o2')],
+      active: createOpponentPokemon(drawnPokemon[0], 'o1'),
+      bench: drawnPokemon.slice(1).map((pokemon, index) => createOpponentPokemon(pokemon, `o${index + 2}`)),
+      trainerEffects: []
+    };
+  }
+
+  private createSideFromCards(cards: Card[], sidePrefix: string): BattleSideState {
+    const pokemonCards = cards.filter(card => card.cardType === 'pokemon') as Extract<Card, { cardType: 'pokemon' }>[];
+    const drawnPokemon = [...pokemonCards].sort(() => Math.random() - 0.5).slice(0, 5);
+    const activeCard = drawnPokemon[0];
+    const fallbackMoves = [
+      this.createMove('Quick Attack', activeCard?.element || 'normal', 20, 'A fast strike.', [activeCard?.element || 'normal']),
+      this.createMove('Power Hit', activeCard?.element || 'normal', 35, 'A powerful attack.', [activeCard?.element || 'normal', activeCard?.element || 'normal'])
+    ];
+
+    return {
+      active: this.createMon(
+        `${sidePrefix}1`,
+        activeCard?.name || 'Pikachu',
+        activeCard?.hp || 60,
+        activeCard?.element || 'lightning',
+        activeCard?.attacks?.[0]?.damage || 20,
+        this.movesForCard(activeCard, fallbackMoves),
+        2,
+        this.imageForCard(activeCard, 'Pikachu')
+      ),
+      bench: drawnPokemon.slice(1).map((card, index) => this.createMon(
+        `${sidePrefix}${index + 2}`,
+        card.name,
+        card.hp || 60,
+        card.element,
+        card.attacks?.[0]?.damage || 20,
+        this.movesForCard(card, fallbackMoves),
+        2,
+        this.imageForCard(card, 'Pikachu')
+      )),
       trainerEffects: []
     };
   }
@@ -97,6 +152,7 @@ export class BattleService {
       energyUsed: 0,
       maxTrainer: 1,
       trainerUsed: 0,
+      trainerDrawn: false,
       maxSwaps: 1,
       swapsUsed: 0,
       hasEndedTurn: false
@@ -163,29 +219,9 @@ export class BattleService {
     return map[element] || undefined;
   }
 
-  createInitialBattle(playerCards: Card[] = []): BattleState {
-    const pokemonCards = playerCards.filter(card => card.cardType === 'pokemon') as Extract<Card, { cardType: 'pokemon' }>[];
-    const activeCard = pokemonCards[0];
-    const benchCard = pokemonCards[1];
-    const playerFallbackMoves = [
-      this.createMove('Quick Attack', 'lightning', 20, 'A fast electric strike.', ['lightning']),
-      this.createMove('Thunderbolt', 'lightning', 35, 'A powerful electric blast.', ['lightning', 'lightning'])
-    ];
-    const benchFallbackMoves = [
-      this.createMove('Vine Whip', 'grass', 18, 'A whipping vine strike.', ['grass']),
-      this.createMove('Solar Beam', 'grass', 30, 'A beam of solar energy.', ['grass', 'grass'])
-    ];
-    const player: BattleSideState = {
-      active: this.createMon('p1', activeCard?.name || 'Pikachu', activeCard?.hp || 60, activeCard?.element || 'lightning', activeCard?.attacks?.[0]?.damage || 20, [
-        ...this.movesForCard(activeCard, playerFallbackMoves)
-      ], 2, this.imageForCard(activeCard, 'Pikachu')),
-      bench: [this.createMon('p2', benchCard?.name || 'Bulbasaur', benchCard?.hp || 70, benchCard?.element || 'grass', benchCard?.attacks?.[0]?.damage || 18, [
-        ...this.movesForCard(benchCard, benchFallbackMoves)
-      ], 2, this.imageForCard(benchCard, 'Bulbasaur'))],
-      trainerEffects: []
-    };
-
-    const opponent = this.createOpponentSide();
+  createInitialBattle(playerCards: Card[] = [], opponentCards: Card[] = []): BattleState {
+    const player = this.createSideFromCards(playerCards, 'p');
+    const opponent = opponentCards.length ? this.createSideFromCards(opponentCards, 'o') : this.createOpponentSide();
 
     return {
       player,

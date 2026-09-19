@@ -578,6 +578,38 @@ app-root {
   outline-offset: 2px;
 }
 
+.battle-trainer-card {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 10px;
+  border: 2px solid rgba(250, 172, 45, 0.55);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff7d6, #fffdf2);
+}
+
+.battle-trainer-image {
+  width: 64px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 3px 8px rgba(20, 28, 60, 0.2);
+}
+
+.battle-trainer-card p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.battle-trainer-card .pokemon-primary-btn,
+.battle-trainer-card .pokemon-mini-btn {
+  width: auto;
+  white-space: nowrap;
+}
+
 .pokemon-form-row,
 .pokemon-search-row,
 .pokemon-select-row,
@@ -1027,6 +1059,15 @@ app-root {
 
   .battle-deck-picker select {
     width: 100%;
+  }
+
+  .battle-trainer-card {
+    grid-template-columns: 56px 1fr;
+  }
+
+  .battle-trainer-card .pokemon-primary-btn,
+  .battle-trainer-card .pokemon-mini-btn {
+    grid-row: 2;
   }
 
   .profile-stats-grid,

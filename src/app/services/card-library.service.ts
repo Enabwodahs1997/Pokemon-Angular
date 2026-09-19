@@ -7,6 +7,49 @@ const POKEMON_TCG_API_URL = 'https://api.pokemontcg.io/v2';
 
 @Injectable({ providedIn: 'root' })
 export class CardLibraryService {
+  private readonly fallbackTrainerCards: CardTemplate[] = [
+    {
+      id: 'potion-fallback',
+      name: 'Potion',
+      cardType: 'trainer',
+      element: 'normal',
+      imageUrl: 'https://images.pokemontcg.io/base1/83.png',
+      description: 'Heal the active Pokémon and gain +8 attack.',
+      power: 0,
+      rarity: 'uncommon'
+    },
+    {
+      id: 'switch-fallback',
+      name: 'Switch',
+      cardType: 'trainer',
+      element: 'normal',
+      imageUrl: 'https://images.pokemontcg.io/base1/95.png',
+      description: 'Recover and reposition the active Pokémon.',
+      power: 0,
+      rarity: 'common'
+    },
+    {
+      id: 'bill-fallback',
+      name: 'Bill',
+      cardType: 'trainer',
+      element: 'normal',
+      imageUrl: 'https://images.pokemontcg.io/base1/91.png',
+      description: 'Draw another tactical advantage.',
+      power: 0,
+      rarity: 'common'
+    },
+    {
+      id: 'professor-oak-fallback',
+      name: 'Professor Oak',
+      cardType: 'trainer',
+      element: 'normal',
+      imageUrl: 'https://images.pokemontcg.io/base1/88.png',
+      description: 'Strengthen the active Pokémon with expert guidance.',
+      power: 0,
+      rarity: 'uncommon'
+    }
+  ];
+
   private readonly fallbackImageUrls: Record<string, string> = {
     pikachu: 'https://images.pokemontcg.io/base1/58.png',
     bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
@@ -81,6 +124,7 @@ export class CardLibraryService {
       name: 'Potion',
       cardType: 'trainer',
       element: 'normal',
+      imageUrl: 'https://images.pokemontcg.io/base1/83.png',
       description: 'Heal 30 damage from a Pokémon.',
       power: 0,
       rarity: 'uncommon'
@@ -233,6 +277,26 @@ export class CardLibraryService {
     }
 
     return this.library.filter(card => !cleanQuery || card.name.toLowerCase().includes(cleanQuery.toLowerCase()));
+  }
+
+  async getRandomTrainerCard(): Promise<CardTemplate> {
+    try {
+      const headers = new HttpHeaders({ 'X-API-Key': POKEMON_TCG_API_KEY });
+      const result = await this.http.get<any>(`${POKEMON_TCG_API_URL}/cards`, {
+        headers,
+        params: { q: 'supertype:Trainer', pageSize: 50 }
+      }).toPromise();
+      const trainers = (result?.data || []).map((card: any) => this.mapApiCard(card)).filter((card: CardTemplate | null): card is CardTemplate => card?.cardType === 'trainer');
+      if (trainers.length) {
+        return trainers[Math.floor(Math.random() * trainers.length)];
+      }
+    } catch {
+      // Use the local trainer when the API is unavailable.
+    }
+
+    const localTrainers = this.library.filter(card => card.cardType === 'trainer');
+    const fallbackPool = localTrainers.length ? localTrainers : this.fallbackTrainerCards;
+    return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
   }
 
   getById(id: string) {

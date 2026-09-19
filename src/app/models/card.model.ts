@@ -113,6 +113,7 @@ export interface TurnActionState {
   energyUsed: number;
   maxTrainer: number;
   trainerUsed: number;
+  trainerDrawn: boolean;
   maxSwaps: number;
   swapsUsed: number;
   hasEndedTurn: boolean;

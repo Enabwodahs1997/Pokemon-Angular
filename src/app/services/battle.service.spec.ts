@@ -42,4 +42,37 @@ describe('BattleService', () => {
     expect(battle.player.active?.moves[0].damageText).toBeUndefined();
     expect(battle.player.active?.moves[0].description).toBe('A real card attack.');
   });
+
+  it('draws up to five Pokemon for both players', () => {
+    const service = new BattleService();
+    const cards = Array.from({ length: 6 }, (_, index) => ({
+      cardType: 'pokemon' as const,
+      name: `Deck Pokemon ${index}`,
+      hp: 60,
+      element: 'fire' as const,
+      stage: 'basic' as const,
+      attacks: []
+    }));
+    const battle = service.createInitialBattle(cards);
+
+    expect(battle.player.bench.length).toBe(4);
+    expect(battle.opponent.bench.length).toBe(4);
+    expect(battle.player.bench.length + 1).toBeLessThanOrEqual(5);
+    expect(battle.opponent.bench.length + 1).toBeLessThanOrEqual(5);
+  });
+
+  it('uses a supplied second deck for Player 2', () => {
+    const service = new BattleService();
+    const playerTwoCards = [{
+      cardType: 'pokemon' as const,
+      name: 'Player Two Charizard',
+      hp: 120,
+      element: 'fire' as const,
+      stage: 'basic' as const,
+      attacks: []
+    }];
+    const battle = service.createInitialBattle([], playerTwoCards);
+
+    expect(battle.opponent.active?.name).toBe('Player Two Charizard');
+  });
 });
