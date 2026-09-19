@@ -25,10 +25,13 @@ import { BattleState, Card, CardTemplate, Deck } from '../models/card.model';
         <button type="button" class="pokemon-secondary-btn" (click)="toggleLocalMode()">
           {{ localMultiplayer ? 'Play against CPU' : 'Play against another player' }}
         </button>
-        <select [(ngModel)]="selectedDeckId" name="battleDeck" (ngModelChange)="loadSelectedDeck()">
-          <option value="">Choose a deck...</option>
-          <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
-        </select>
+        <div class="battle-deck-picker battle-deck-picker-setup">
+          <label for="battleDeck">Player 1 deck</label>
+          <select id="battleDeck" [(ngModel)]="selectedDeckId" name="battleDeck" (ngModelChange)="loadSelectedDeck()">
+            <option value="">Choose a deck...</option>
+            <option *ngFor="let deck of decks" [value]="deck.id">{{ deck.name }}</option>
+          </select>
+        </div>
         <div *ngIf="localMultiplayer" class="battle-deck-picker">
           <label for="playerTwoDeck">Player 2 deck</label>
           <select id="playerTwoDeck" [(ngModel)]="playerTwoDeckId" name="playerTwoDeck" (ngModelChange)="loadPlayerTwoDeck()">
