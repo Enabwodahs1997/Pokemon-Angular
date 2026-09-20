@@ -1,19 +1,18 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Attack, CardElement, CardTemplate, CardType } from '../models/card.model';
 
-const POKEMON_TCG_API_KEY = 'c6d102fa-7c57-49bc-8efd-dbce0d244884';
-const POKEMON_TCG_API_URL = 'https://api.pokemontcg.io/v2';
+const POKE_API_URL = 'https://pokeapi.co/api/v2';
 
 @Injectable({ providedIn: 'root' })
 export class CardLibraryService {
+  readonly apiConfigured = true;
   private readonly fallbackTrainerCards: CardTemplate[] = [
     {
       id: 'potion-fallback',
       name: 'Potion',
       cardType: 'trainer',
       element: 'normal',
-      imageUrl: 'https://images.pokemontcg.io/base1/83.png',
       description: 'Heal the active Pokémon and gain +8 attack.',
       power: 0,
       rarity: 'uncommon'
@@ -23,7 +22,6 @@ export class CardLibraryService {
       name: 'Switch',
       cardType: 'trainer',
       element: 'normal',
-      imageUrl: 'https://images.pokemontcg.io/base1/95.png',
       description: 'Recover and reposition the active Pokémon.',
       power: 0,
       rarity: 'common'
@@ -33,7 +31,6 @@ export class CardLibraryService {
       name: 'Bill',
       cardType: 'trainer',
       element: 'normal',
-      imageUrl: 'https://images.pokemontcg.io/base1/91.png',
       description: 'Draw another tactical advantage.',
       power: 0,
       rarity: 'common'
@@ -43,7 +40,6 @@ export class CardLibraryService {
       name: 'Professor Oak',
       cardType: 'trainer',
       element: 'normal',
-      imageUrl: 'https://images.pokemontcg.io/base1/88.png',
       description: 'Strengthen the active Pokémon with expert guidance.',
       power: 0,
       rarity: 'uncommon'
@@ -51,11 +47,11 @@ export class CardLibraryService {
   ];
 
   private readonly fallbackImageUrls: Record<string, string> = {
-    pikachu: 'https://images.pokemontcg.io/base1/58.png',
-    bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
-    charmander: 'https://images.pokemontcg.io/base1/46.png',
-    squirtle: 'https://images.pokemontcg.io/base1/63.png',
-    mewtwo: 'https://images.pokemontcg.io/base1/10.png'
+    pikachu: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
+    bulbasaur: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
+    charmander: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png',
+    squirtle: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png',
+    mewtwo: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png'
   };
 
   private library: CardTemplate[] = [
@@ -64,7 +60,7 @@ export class CardLibraryService {
       name: 'Pikachu',
       cardType: 'pokemon',
       element: 'lightning',
-      imageUrl: 'https://images.pokemontcg.io/base1/58.png',
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
       hp: 60,
       description: 'Fast electric attacker.',
       attackNames: ['Quick Attack', 'Thunder Shock'],
@@ -76,7 +72,7 @@ export class CardLibraryService {
       name: 'Bulbasaur',
       cardType: 'pokemon',
       element: 'grass',
-      imageUrl: 'https://images.pokemontcg.io/base1/44.png',
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
       hp: 70,
       description: 'Steady grass starter.',
       attackNames: ['Vine Whip', 'Razor Leaf'],
@@ -88,7 +84,7 @@ export class CardLibraryService {
       name: 'Charmander',
       cardType: 'pokemon',
       element: 'fire',
-      imageUrl: 'https://images.pokemontcg.io/base1/46.png',
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png',
       hp: 60,
       description: 'Explosive fire attacker.',
       attackNames: ['Flame Burst', 'Ember'],
@@ -100,7 +96,7 @@ export class CardLibraryService {
       name: 'Squirtle',
       cardType: 'pokemon',
       element: 'water',
-      imageUrl: 'https://images.pokemontcg.io/base1/63.png',
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png',
       hp: 70,
       description: 'Tough water defender.',
       attackNames: ['Bubble Shot', 'Water Pulse'],
@@ -112,7 +108,7 @@ export class CardLibraryService {
       name: 'Mewtwo',
       cardType: 'pokemon',
       element: 'psychic',
-      imageUrl: 'https://images.pokemontcg.io/base1/10.png',
+      imageUrl: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png',
       hp: 120,
       description: 'Legendary psychic powerhouse.',
       attackNames: ['Psychic Burst', 'Future Sight'],
@@ -124,7 +120,6 @@ export class CardLibraryService {
       name: 'Potion',
       cardType: 'trainer',
       element: 'normal',
-      imageUrl: 'https://images.pokemontcg.io/base1/83.png',
       description: 'Heal 30 damage from a Pokémon.',
       power: 0,
       rarity: 'uncommon'
@@ -152,6 +147,9 @@ export class CardLibraryService {
 
   private normalizeCardType(value?: string): CardType {
     const normalized = (value || 'pokemon').toLowerCase();
+    if (normalized === 'pokémon' || normalized === 'pokemon') {
+      return 'pokemon';
+    }
     if (normalized === 'trainer' || normalized === 'energy') {
       return normalized as CardType;
     }
@@ -164,71 +162,48 @@ export class CardLibraryService {
     return valid.includes(normalized as any) ? normalized as any : 'common';
   }
 
-  private normalizeAttackElement(value?: string): CardElement {
-    return this.normalizeElement(value === 'Colorless' ? 'normal' : value);
-  }
-
   private normalizeAttackDamage(value?: string | number) {
     const damage = Number(String(value || '0').replace(/[^0-9]/g, ''));
     return damage || 10;
   }
 
-  private mapApiCard(card: any): CardTemplate | null {
-    const cardType = this.normalizeCardType(card.supertype);
-    const name = card.name || 'Unknown Card';
-    const description = card.flavorText || card.text?.join(' ') || '';
-    const imageUrl = card.images?.large || card.images?.small;
-
-    if (cardType === 'pokemon') {
-      return {
-        id: card.id,
-        name,
-        cardType,
-        element: this.normalizeElement(card.types?.[0]),
-        imageUrl,
-        hp: Number(card.hp || 0),
-        description,
-        attackNames: (card.attacks || []).map((attack: any) => attack.name),
-        attacks: (card.attacks || []).map((attack: any): Attack => ({
-          name: attack.name || 'Attack',
-          cost: (attack.cost || []).map((element: string) => this.normalizeAttackElement(element)),
-          damage: this.normalizeAttackDamage(attack.damage),
-          damageText: attack.damage ? String(attack.damage) : undefined,
-          description: attack.text?.join(' ') || `${attack.name || 'Attack'} attack.`
-        })),
-        power: Math.max(0, ...(card.attacks || []).map((attack: any) => Number(attack.damage?.replace(/[^0-9]/g, '') || 0))),
-        rarity: this.normalizeRarity(card.rarity)
-      };
-    }
-
-    if (cardType === 'trainer') {
-      return {
-        id: card.id,
-        name,
-        cardType,
-        element: this.normalizeElement(card.types?.[0] || 'normal'),
-        imageUrl,
-        description,
-        power: 0,
-        rarity: this.normalizeRarity(card.rarity)
-      };
-    }
+  private mapApiPokemon(pokemon: any): CardTemplate {
+    const primaryType = pokemon.types?.[0]?.type?.name || 'normal';
+    const moves: Attack[] = (pokemon.moves || []).slice(0, 4).map((move: any, index: number): Attack => ({
+      name: this.toTitleCase(move.move?.name || 'Tackle'),
+      cost: [this.normalizeElement(primaryType)],
+      damage: 10 + index * 5,
+      description: `${this.toTitleCase(move.move?.name || 'Tackle')} move from PokeAPI.`
+    }));
+    const imageUrl = pokemon.sprites?.other?.['official-artwork']?.front_default || pokemon.sprites?.front_default;
+    const baseAttack = Number(pokemon.stats?.find((stat: any) => stat.stat?.name === 'attack')?.base_stat || 20);
 
     return {
-      id: card.id,
-      name,
-      cardType,
-      element: this.normalizeElement(card.types?.[0] || 'normal'),
+      id: `pokeapi-${pokemon.id}`,
+      name: this.toTitleCase(pokemon.name),
+      cardType: 'pokemon',
+      element: this.normalizeElement(primaryType),
       imageUrl,
-      description,
-      power: 0,
-      rarity: this.normalizeRarity(card.rarity)
+      hp: Number(pokemon.stats?.find((stat: any) => stat.stat?.name === 'hp')?.base_stat || 60),
+      abilities: (pokemon.abilities || []).map((ability: any) => this.toTitleCase(ability.ability?.name || '')).filter(Boolean),
+      height: Number(pokemon.height || 0) / 10,
+      weight: Number(pokemon.weight || 0) / 10,
+      baseAttack,
+      description: `${this.toTitleCase(pokemon.name)} from PokeAPI.`,
+      attackNames: moves.map(move => move.name),
+      attacks: moves,
+      power: moves[0]?.damage || 10,
+      rarity: 'common'
     };
+  }
+
+  private toTitleCase(value: string) {
+    return value.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
   }
 
   private async loadLiveCards() {
     try {
-      const cards = await this.search('');
+      const cards = await this.getAll();
       if (cards.length) {
         this.library = cards;
       }
@@ -237,23 +212,23 @@ export class CardLibraryService {
     }
   }
 
-  private fetchFromApi(query?: string) {
-    const headers = new HttpHeaders({ 'X-API-Key': POKEMON_TCG_API_KEY });
-    const params: any = {
-      pageSize: 20
-    };
+  private fetchPokemonList(limit = 250, offset = 0) {
+    return this.http.get<any>(`${POKE_API_URL}/pokemon`, { params: { limit, offset } });
+  }
 
-    if (query && query.trim()) {
-      params.q = `name:*${query.trim()}*`;
-    }
+  private fetchPokemon(name: string) {
+    return this.http.get<any>(`${POKE_API_URL}/pokemon/${name.toLowerCase()}`);
+  }
 
-    return this.http.get<any>(`${POKEMON_TCG_API_URL}/cards`, { headers, params });
+  private async loadPokemonDetails(names: string[]) {
+    const details = await Promise.all(names.map(name => this.fetchPokemon(name).toPromise()));
+    return details.map(pokemon => this.mapApiPokemon(pokemon));
   }
 
   async getAll() {
     try {
-      const result = await this.fetchFromApi().toPromise();
-      const cards = (result?.data || []).map((card: any) => this.mapApiCard(card)).filter(Boolean) as CardTemplate[];
+      const result = await this.fetchPokemonList().toPromise();
+      const cards = await this.loadPokemonDetails((result?.results || []).map((pokemon: any) => pokemon.name));
       if (cards.length) {
         this.library = cards;
       }
@@ -266,8 +241,11 @@ export class CardLibraryService {
   async search(query: string) {
     const cleanQuery = query.trim();
     try {
-      const result = await this.fetchFromApi(cleanQuery).toPromise();
-      const cards = (result?.data || []).map((card: any) => this.mapApiCard(card)).filter(Boolean) as CardTemplate[];
+      const result = await this.fetchPokemonList(2000).toPromise();
+      const matchingNames = (result?.results || [])
+        .map((pokemon: any) => pokemon.name)
+        .filter((name: string) => !cleanQuery || name.includes(cleanQuery.toLowerCase()));
+      const cards = await this.loadPokemonDetails(matchingNames);
       if (cards.length) {
         this.library = cards;
         return [...cards];
@@ -279,24 +257,26 @@ export class CardLibraryService {
     return this.library.filter(card => !cleanQuery || card.name.toLowerCase().includes(cleanQuery.toLowerCase()));
   }
 
-  async getRandomTrainerCard(): Promise<CardTemplate> {
+  async getRandomPokemonCards(count = 5): Promise<CardTemplate[]> {
     try {
-      const headers = new HttpHeaders({ 'X-API-Key': POKEMON_TCG_API_KEY });
-      const result = await this.http.get<any>(`${POKEMON_TCG_API_URL}/cards`, {
-        headers,
-        params: { q: 'supertype:Trainer', pageSize: 50 }
-      }).toPromise();
-      const trainers = (result?.data || []).map((card: any) => this.mapApiCard(card)).filter((card: CardTemplate | null): card is CardTemplate => card?.cardType === 'trainer');
-      if (trainers.length) {
-        return trainers[Math.floor(Math.random() * trainers.length)];
-      }
+      const result = await this.fetchPokemonList(2000).toPromise();
+      const names = (result?.results || [])
+        .map((pokemon: any) => pokemon.name)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, count);
+      return await this.loadPokemonDetails(names);
     } catch {
-      // Use the local trainer when the API is unavailable.
+      return this.library.filter(card => card.cardType === 'pokemon').sort(() => Math.random() - 0.5).slice(0, count);
     }
+  }
 
-    const localTrainers = this.library.filter(card => card.cardType === 'trainer');
-    const fallbackPool = localTrainers.length ? localTrainers : this.fallbackTrainerCards;
+  async getRandomTrainerCard(): Promise<CardTemplate> {
+    const fallbackPool = this.fallbackTrainerCards;
     return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+  }
+
+  async getExpansions(): Promise<any[]> {
+    return [];
   }
 
   getById(id: string) {

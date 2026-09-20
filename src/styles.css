@@ -22,6 +22,21 @@
   margin-right: 10px;
 }
 
+.pokemon-card-item small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.card-library-range-note {
+  margin: -6px 0 12px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .battle-card-image {
   display: block;
   width: min(100%, 180px);
@@ -506,6 +521,33 @@ app-root {
   opacity: 0.68;
 }
 
+.card-library-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(42, 93, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(42, 93, 255, 0.06);
+  color: var(--pokemon-blue-dark);
+  font-weight: 800;
+}
+
+.card-library-spinner {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 3px solid rgba(42, 93, 255, 0.2);
+  border-top-color: var(--pokemon-blue);
+  border-radius: 50%;
+  animation: card-library-spin 0.8s linear infinite;
+}
+
+@keyframes card-library-spin {
+  to { transform: rotate(360deg); }
+}
+
 .pokemon-panel {
   background: rgba(255, 255, 255, 0.9);
   border: 2px solid rgba(17, 51, 166, 0.12);
@@ -632,8 +674,17 @@ app-root {
   flex-wrap: wrap;
 }
 
+.battle-top-actions {
+  margin: 14px 0 18px;
+  padding: 12px;
+  border: 1px solid rgba(17, 51, 166, 0.12);
+  border-radius: 14px;
+  background: rgba(42, 93, 255, 0.045);
+}
+
 .pokemon-form-row input,
 .pokemon-search-row input,
+.pokemon-search-row select,
 .pokemon-select-row select {
   flex: 1 1 180px;
   height: 46px;
@@ -642,6 +693,12 @@ app-root {
   padding: 0 12px;
   background: white;
   color: var(--pokemon-text);
+}
+
+.pokemon-search-row input[type="number"],
+.pokemon-search-row select {
+  flex: 1 1 140px;
+  min-width: 120px;
 }
 
 .pokemon-form-row input:focus,

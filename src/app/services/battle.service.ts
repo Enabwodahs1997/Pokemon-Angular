@@ -1,17 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BattleState, BattleSideState, BoardPokemon, BattleLogEntry, Card, CardElement, Move, TurnActionState } from '../models/card.model';
 
-type OpponentPokemonDefinition = readonly [string, CardElement, number, number, string, number, string, number, string];
-
 @Injectable({ providedIn: 'root' })
 export class BattleService {
-  private lastOpponentDeck = -1;
-  private readonly fallbackImages: Record<string, string> = {
-    pikachu: 'https://images.pokemontcg.io/base1/58.png',
-    bulbasaur: 'https://images.pokemontcg.io/base1/44.png',
-    charmander: 'https://images.pokemontcg.io/base1/46.png',
-    squirtle: 'https://images.pokemontcg.io/base1/63.png'
-  };
+  private readonly fallbackImages: Record<string, string> = {};
 
   private imageForCard(card: Extract<Card, { cardType: 'pokemon' }> | undefined, fallbackName: string) {
     if (card?.imageUrl) {
@@ -46,69 +38,6 @@ export class BattleService {
     ));
   }
 
-  private createOpponentSide(): BattleSideState {
-    const opponentDecks: ReadonlyArray<{ pokemon: OpponentPokemonDefinition[] }> = [
-      {
-        pokemon: [
-          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flare Blitz', 38, 'https://images.pokemontcg.io/base1/46.png'],
-          ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png'],
-          ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
-          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
-          ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
-        ]
-      },
-      {
-        pokemon: [
-          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
-          ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png'],
-          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
-          ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
-          ['Mewtwo', 'psychic', 80, 28, 'Confusion', 25, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
-        ]
-      },
-      {
-        pokemon: [
-          ['Pikachu', 'lightning', 60, 20, 'Quick Attack', 20, 'Thunderbolt', 35, 'https://images.pokemontcg.io/base1/58.png'],
-          ['Mewtwo', 'psychic', 80, 28, 'Psywave', 24, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png'],
-          ['Squirtle', 'water', 70, 19, 'Bubble Pulse', 20, 'Surf', 32, 'https://images.pokemontcg.io/base1/63.png'],
-          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
-          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Solar Beam', 30, 'https://images.pokemontcg.io/base1/44.png']
-        ]
-      },
-      {
-        pokemon: [
-          ['Squirtle', 'water', 70, 19, 'Water Gun', 20, 'Aqua Tail', 34, 'https://images.pokemontcg.io/base1/63.png'],
-          ['Charmander', 'fire', 60, 22, 'Ember', 22, 'Flame Burst', 32, 'https://images.pokemontcg.io/base1/46.png'],
-          ['Bulbasaur', 'grass', 70, 18, 'Vine Whip', 18, 'Razor Leaf', 30, 'https://images.pokemontcg.io/base1/44.png'],
-          ['Pikachu', 'lightning', 60, 20, 'Thunder Shock', 20, 'Electro Ball', 34, 'https://images.pokemontcg.io/base1/58.png'],
-          ['Mewtwo', 'psychic', 80, 28, 'Confusion', 25, 'Psychic', 42, 'https://images.pokemontcg.io/base1/10.png']
-        ]
-      }
-    ];
-
-    let deckIndex = Math.floor(Math.random() * opponentDecks.length);
-    if (opponentDecks.length > 1 && deckIndex === this.lastOpponentDeck) {
-      deckIndex = (deckIndex + 1) % opponentDecks.length;
-    }
-    this.lastOpponentDeck = deckIndex;
-
-    const selectedDeck = opponentDecks[deckIndex];
-    const drawnPokemon = [...selectedDeck.pokemon].sort(() => Math.random() - 0.5).slice(0, 5);
-    const createOpponentPokemon = (pokemon: OpponentPokemonDefinition, id: string) => {
-      const [name, element, hp, attackPower, firstMove, firstDamage, secondMove, secondDamage, imageUrl] = pokemon;
-      const cardElement = element as CardElement;
-      return this.createMon(id, name, hp, cardElement, attackPower, [
-        this.createMove(firstMove, cardElement, firstDamage, `${firstMove} attack.`, [cardElement]),
-        this.createMove(secondMove, cardElement, secondDamage, `${secondMove} attack.`, [cardElement, cardElement])
-      ], 2, imageUrl);
-    };
-
-    return {
-      active: createOpponentPokemon(drawnPokemon[0], 'o1'),
-      bench: drawnPokemon.slice(1).map((pokemon, index) => createOpponentPokemon(pokemon, `o${index + 2}`)),
-      trainerEffects: []
-    };
-  }
 
   private createSideFromCards(cards: Card[], sidePrefix: string): BattleSideState {
     const pokemonCards = cards.filter(card => card.cardType === 'pokemon') as Extract<Card, { cardType: 'pokemon' }>[];
@@ -125,7 +54,7 @@ export class BattleService {
         activeCard?.name || 'Pikachu',
         activeCard?.hp || 60,
         activeCard?.element || 'lightning',
-        activeCard?.attacks?.[0]?.damage || 20,
+        activeCard?.baseAttack || activeCard?.attacks?.[0]?.damage || 20,
         this.movesForCard(activeCard, fallbackMoves),
         2,
         this.imageForCard(activeCard, 'Pikachu')
@@ -221,7 +150,13 @@ export class BattleService {
 
   createInitialBattle(playerCards: Card[] = [], opponentCards: Card[] = []): BattleState {
     const player = this.createSideFromCards(playerCards, 'p');
-    const opponent = opponentCards.length ? this.createSideFromCards(opponentCards, 'o') : this.createOpponentSide();
+    const opponent = this.createSideFromCards(opponentCards.length ? opponentCards : [
+      { cardType: 'pokemon', name: 'Pikachu', hp: 60, element: 'lightning', stage: 'basic', attacks: [] },
+      { cardType: 'pokemon', name: 'Bulbasaur', hp: 70, element: 'grass', stage: 'basic', attacks: [] },
+      { cardType: 'pokemon', name: 'Charmander', hp: 60, element: 'fire', stage: 'basic', attacks: [] },
+      { cardType: 'pokemon', name: 'Squirtle', hp: 70, element: 'water', stage: 'basic', attacks: [] },
+      { cardType: 'pokemon', name: 'Mewtwo', hp: 80, element: 'psychic', stage: 'basic', attacks: [] }
+    ], 'o');
 
     return {
       player,

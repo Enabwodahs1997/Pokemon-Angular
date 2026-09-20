@@ -65,6 +65,18 @@ import { BattleState, Card, CardTemplate, Deck } from '../models/card.model';
           <button type="button" class="pokemon-secondary-btn" (click)="startNewBattle()">Restart battle</button>
         </div>
 
+        <div class="pokemon-action-row battle-top-actions">
+          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-secondary-btn" (click)="attachEnergy('player')">Attach energy</button>
+          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-secondary-btn" [disabled]="playerTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('player')">{{ trainerLoading === 'player' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Draw trainer card' }}</button>
+          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" (click)="attachEnergy('opponent')">Player 2 energy</button>
+          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" [disabled]="opponentTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('opponent')">{{ trainerLoading === 'opponent' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Player 2 draw trainer' }}</button>
+          <button *ngIf="!localMultiplayer" type="button" class="pokemon-secondary-btn" (click)="opponentTurn()">Opponent attack</button>
+          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-primary-btn" (click)="endPlayerTwoTurn()">Player 2 end turn</button>
+          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-primary-btn" [disabled]="opponentThinking" (click)="endTurn()">
+            {{ opponentThinking ? 'Opponent thinking...' : 'Player 1 end turn' }}
+          </button>
+        </div>
+
         <div *ngIf="battleState.winner === 'player'" class="battle-result battle-result-win" role="status" aria-live="polite">
           <strong>You win!</strong>
           <span>All opposing Pokémon have been defeated.</span>
@@ -135,20 +147,8 @@ import { BattleState, Card, CardTemplate, Deck } from '../models/card.model';
           </div>
         </div>
 
-        <div class="pokemon-action-row">
-          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-secondary-btn" (click)="attachEnergy('player')">Attach energy</button>
-          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-secondary-btn" [disabled]="playerTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('player')">{{ trainerLoading === 'player' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Draw trainer card' }}</button>
-          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" (click)="attachEnergy('opponent')">Player 2 energy</button>
-          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" [disabled]="opponentTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('opponent')">{{ trainerLoading === 'opponent' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Player 2 draw trainer' }}</button>
-          <button *ngIf="!localMultiplayer" type="button" class="pokemon-secondary-btn" (click)="opponentTurn()">Opponent attack</button>
-          <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-primary-btn" (click)="endPlayerTwoTurn()">Player 2 end turn</button>
-          <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-primary-btn" [disabled]="opponentThinking" (click)="endTurn()">
-            {{ opponentThinking ? 'Opponent thinking...' : 'Player 1 end turn' }}
-          </button>
-        </div>
-
         <ul class="pokemon-log-list">
-          <li *ngFor="let entry of battleState.log" class="pokemon-log-item">
+          <li *ngFor="let entry of newestLogEntries" class="pokemon-log-item">
             <span class="pokemon-log-tag">{{ entry.type }}</span>
             <span>{{ entry.message }}</span>
             <span *ngIf="entry.damage" class="pokemon-damage">-{{ entry.damage }}</span>
@@ -176,6 +176,10 @@ export class BattleBoardComponent {
 
   get floatingDamage() {
     return this.battleState?.log.filter(entry => typeof entry.damage === 'number' && entry.damage > 0).slice(-4).reverse() || [];
+  }
+
+  get newestLogEntries() {
+    return this.battleState?.log.slice().reverse() || [];
   }
 
   get canDrawCards() {
@@ -278,13 +282,20 @@ export class BattleBoardComponent {
     }
   }
 
-  drawCards() {
+  async drawCards() {
     if (!this.selectedDeckId || !this.deckCards.length) {
       return;
     }
 
+    const opponentCards = this.localMultiplayer
+      ? this.playerTwoDeckCards
+      : await this.cardLibrary.getRandomPokemonCards(5);
+    const opponentBattleCards = opponentCards.map(card => ({
+      ...card,
+      stage: 'basic'
+    })) as Card[];
     this.battleState = this.battleService.startTurn(
-      this.battleService.createInitialBattle(this.deckCards, this.localMultiplayer ? this.playerTwoDeckCards : []),
+      this.battleService.createInitialBattle(this.deckCards, opponentBattleCards),
       'player'
     );
     this.battleResultRecorded = false;

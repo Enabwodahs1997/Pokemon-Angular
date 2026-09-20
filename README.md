@@ -40,6 +40,8 @@ export const environment = {
 
 This project automatically merges the local file over the safe placeholder values in `src/environments/environment.ts`.
 
+Card search uses the public PokeAPI at `https://pokeapi.co/api/v2/`; no API key is required.
+
 4. Run locally:
 
 ```bash

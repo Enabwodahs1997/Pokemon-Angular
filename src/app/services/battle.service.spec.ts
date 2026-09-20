@@ -21,7 +21,7 @@ describe('BattleService', () => {
     expect(next.turnActions.attacksUsed).toBe(1);
   });
 
-  it('uses the selected Pokemon card attacks as battle moves', () => {
+  it('uses the selected Pokémon card attacks as battle moves', () => {
     const service = new BattleService();
     const battle = service.createInitialBattle([{
       cardType: 'pokemon',
@@ -43,7 +43,7 @@ describe('BattleService', () => {
     expect(battle.player.active?.moves[0].description).toBe('A real card attack.');
   });
 
-  it('draws up to five Pokemon for both players', () => {
+  it('draws up to five Pokémon for both players', () => {
     const service = new BattleService();
     const cards = Array.from({ length: 6 }, (_, index) => ({
       cardType: 'pokemon' as const,

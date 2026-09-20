@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { DeckBuilderService } from '../services/deck-builder.service';
 import { CardLibraryService } from '../services/card-library.service';
-import { Card, Deck, CardTemplate } from '../models/card.model';
+import { Card, CardElement, Deck, CardTemplate } from '../models/card.model';
 import { Router } from '@angular/router';
 
 @Component({
@@ -32,15 +32,32 @@ import { Router } from '@angular/router';
 
       <section class="pokemon-panel">
         <h2>Card library</h2>
+        <p *ngIf="libraryRanges" class="card-library-range-note">
+          Available range: HP {{ libraryRanges.minHp }}-{{ libraryRanges.maxHp }} · Strength {{ libraryRanges.minStrength }}-{{ libraryRanges.maxStrength }}
+        </p>
         <div class="pokemon-search-row">
-          <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" />
-          <button type="button" class="pokemon-secondary-btn" (click)="searchCards()">Search</button>
+          <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" (ngModelChange)="onSearchTextChanged($event)" />
+          <input [(ngModel)]="minimumStrength" name="minimumStrength" type="number" min="0" placeholder="Min strength" aria-label="Minimum strength" />
+          <input [(ngModel)]="minimumHp" name="minimumHp" type="number" min="0" placeholder="Min HP" aria-label="Minimum HP" />
+          <select [(ngModel)]="selectedType" name="selectedType" aria-label="Filter by type">
+            <option value="">All types</option>
+            <option *ngFor="let type of cardTypes" [value]="type">{{ type | titlecase }}</option>
+          </select>
+          <button type="button" class="pokemon-secondary-btn" (click)="clearFilters()">Clear filters</button>
         </div>
-        <div *ngFor="let card of libraryCards" class="pokemon-card-item">
+        <div *ngIf="libraryLoading" class="card-library-loading" role="status" aria-live="polite">
+          <span class="card-library-spinner" aria-hidden="true"></span>
+          <span>Searching all Pokémon cards...</span>
+        </div>
+        <p *ngIf="!libraryLoading && !filteredLibraryCards.length" class="pokemon-info-text">No Pokémon cards match these filters.</p>
+        <div *ngFor="let card of filteredLibraryCards" class="pokemon-card-item">
           <div>
             <img *ngIf="card.imageUrl" class="card-thumbnail" [src]="card.imageUrl" [alt]="card.name" loading="lazy" />
             <strong>{{ card.name }}</strong>
             <span> ({{ card.cardType }})</span>
+            <small *ngIf="card.cardType === 'pokemon'">
+              HP {{ card.hp }} · {{ card.element }} · {{ card.abilities?.[0] || 'No ability listed' }}
+            </small>
           </div>
           <button type="button" class="pokemon-mini-btn" (click)="addCardToSelectedDeck(card)">Add to selected deck</button>
         </div>
@@ -83,16 +100,48 @@ export class HomeComponent {
   deckName = '';
   deckDescription = '';
   searchText = '';
+  minimumStrength: number | null = null;
+  minimumHp: number | null = null;
+  selectedType: CardElement | '' = '';
+  cardTypes: CardElement[] = ['normal', 'fire', 'water', 'grass', 'lightning', 'psychic', 'fighting', 'dark', 'metal', 'fairy', 'dragon'];
   message = '';
   error = '';
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private searchRequestId = 0;
+  libraryLoading = false;
   decks: Deck[] = [];
   selectedDeckId = '';
   libraryCards: CardTemplate[] = [];
   deckCards: Card[] = [];
+
+  get filteredLibraryCards() {
+    return this.libraryCards.filter(card => {
+      const strengthMatches = this.minimumStrength === null || this.minimumStrength === undefined || (card.baseAttack || card.power || 0) >= this.minimumStrength;
+      const hpMatches = this.minimumHp === null || this.minimumHp === undefined || (card.hp || 0) >= this.minimumHp;
+      const typeMatches = !this.selectedType || card.element === this.selectedType;
+      return strengthMatches && hpMatches && typeMatches;
+    });
+  }
+
+  get libraryRanges() {
+    const pokemonCards = this.libraryCards.filter(card => card.cardType === 'pokemon');
+    if (!pokemonCards.length) {
+      return null;
+    }
+
+    const hpValues = pokemonCards.map(card => card.hp || 0);
+    const strengthValues = pokemonCards.map(card => card.baseAttack || card.power || 0);
+    return {
+      minHp: Math.min(...hpValues),
+      maxHp: Math.max(...hpValues),
+      minStrength: Math.min(...strengthValues),
+      maxStrength: Math.max(...strengthValues)
+    };
+  }
   constructor(
     private auth: AuthService,
     private deckBuilder: DeckBuilderService,
-    private library: CardLibraryService,
+    public library: CardLibraryService,
     private router: Router
   ) {
     this.loadLibraryCards();
@@ -104,7 +153,12 @@ export class HomeComponent {
   }
 
   private async loadLibraryCards() {
-    this.libraryCards = await this.library.getAll();
+    this.libraryLoading = true;
+    try {
+      this.libraryCards = await this.library.getAll();
+    } finally {
+      this.libraryLoading = false;
+    }
   }
 
   resetDeckForm() {
@@ -161,8 +215,34 @@ export class HomeComponent {
     await this.loadDeckCards(user.uid, deckId);
   }
 
-  async searchCards() {
-    this.libraryCards = this.searchText.trim() ? await this.library.search(this.searchText) : await this.library.getAll();
+  onSearchTextChanged(searchText: string) {
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+
+    const requestId = ++this.searchRequestId;
+    this.searchTimer = setTimeout(async () => {
+      this.libraryLoading = true;
+      try {
+        const cards = searchText.trim()
+          ? await this.library.search(searchText)
+          : await this.library.getAll();
+
+        if (requestId === this.searchRequestId) {
+          this.libraryCards = cards;
+        }
+      } finally {
+        if (requestId === this.searchRequestId) {
+          this.libraryLoading = false;
+        }
+      }
+    }, 300);
+  }
+
+  clearFilters() {
+    this.minimumStrength = null;
+    this.minimumHp = null;
+    this.selectedType = '';
   }
 
   async addCardToSelectedDeck(cardTemplate: CardTemplate) {
@@ -178,6 +258,10 @@ export class HomeComponent {
       description: cardTemplate.description,
       rarity: cardTemplate.rarity,
       imageUrl: cardTemplate.imageUrl,
+      abilities: cardTemplate.abilities,
+      height: cardTemplate.height,
+      weight: cardTemplate.weight,
+      baseAttack: cardTemplate.baseAttack,
     };
 
     if (cardTemplate.cardType === 'pokemon') {

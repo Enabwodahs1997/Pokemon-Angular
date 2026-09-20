@@ -19,6 +19,7 @@ export interface PokemonCard {
   stage: 'basic' | 'stage1' | 'stage2';
   evolvesFrom?: string;
   attacks: Attack[];
+  baseAttack?: number;
   weakness?: { type: CardElement; value: string };
   retreatCost?: number;
   imageUrl?: string;
@@ -61,6 +62,10 @@ export interface CardTemplate {
   description?: string;
   attackNames?: string[];
   attacks?: Attack[];
+  abilities?: string[];
+  height?: number;
+  weight?: number;
+  baseAttack?: number;
   power?: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 }
