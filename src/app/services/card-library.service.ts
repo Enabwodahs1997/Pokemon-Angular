@@ -167,13 +167,14 @@ export class CardLibraryService {
     return damage || 10;
   }
 
-  private mapApiPokemon(pokemon: any): CardTemplate {
+  private async mapApiPokemon(pokemon: any): Promise<CardTemplate> {
     const primaryType = pokemon.types?.[0]?.type?.name || 'normal';
-    const moves: Attack[] = (pokemon.moves || []).slice(0, 4).map((move: any, index: number): Attack => ({
-      name: this.toTitleCase(move.move?.name || 'Tackle'),
-      cost: [this.normalizeElement(primaryType)],
-      damage: 10 + index * 5,
-      description: `${this.toTitleCase(move.move?.name || 'Tackle')} move from PokeAPI.`
+    const moveDetails = await Promise.all((pokemon.moves || []).slice(0, 4).map((move: any) => this.http.get<any>(move.move.url).toPromise()));
+    const moves: Attack[] = moveDetails.map((move: any): Attack => ({
+      name: this.toTitleCase(move.name || 'Move'),
+      cost: [this.normalizeElement(move.type?.name || primaryType)],
+      damage: Number(move.power || 0),
+      description: move.effect_entries?.find((entry: any) => entry.language?.name === 'en')?.short_effect || `${this.toTitleCase(move.name || 'Move')} move from PokeAPI.`
     }));
     const imageUrl = pokemon.sprites?.other?.['official-artwork']?.front_default || pokemon.sprites?.front_default;
     const baseAttack = Number(pokemon.stats?.find((stat: any) => stat.stat?.name === 'attack')?.base_stat || 20);
@@ -222,7 +223,7 @@ export class CardLibraryService {
 
   private async loadPokemonDetails(names: string[]) {
     const details = await Promise.all(names.map(name => this.fetchPokemon(name).toPromise()));
-    return details.map(pokemon => this.mapApiPokemon(pokemon));
+    return Promise.all(details.map(pokemon => this.mapApiPokemon(pokemon)));
   }
 
   async getAll() {
@@ -271,6 +272,24 @@ export class CardLibraryService {
   }
 
   async getRandomTrainerCard(): Promise<CardTemplate> {
+    try {
+      const result = await this.http.get<any>(`${POKE_API_URL}/item`, { params: { limit: 2000, offset: 0 } }).toPromise();
+      const names = (result?.results || []).map((item: any) => item.name).sort(() => Math.random() - 0.5);
+      const item = await this.http.get<any>(`${POKE_API_URL}/item/${names[0]}`).toPromise();
+      return {
+        id: `pokeapi-item-${item.id}`,
+        name: this.toTitleCase(item.name),
+        cardType: 'trainer',
+        element: 'normal',
+        imageUrl: item.sprites?.default,
+        description: item.effect_entries?.find((entry: any) => entry.language?.name === 'en')?.short_effect || 'Use this item to boost the active Pokémon.',
+        power: 0,
+        rarity: 'common'
+      };
+    } catch {
+      // Use a local trainer-like fallback if PokeAPI item data is unavailable.
+    }
+
     const fallbackPool = this.fallbackTrainerCards;
     return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
   }

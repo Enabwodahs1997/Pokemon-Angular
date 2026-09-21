@@ -70,7 +70,6 @@ import { BattleState, Card, CardTemplate, Deck } from '../models/card.model';
           <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-secondary-btn" [disabled]="playerTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('player')">{{ trainerLoading === 'player' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Draw trainer card' }}</button>
           <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" (click)="attachEnergy('opponent')">Player 2 energy</button>
           <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-secondary-btn" [disabled]="opponentTrainerCard || trainerLoading || battleState.turnActions.trainerDrawn" (click)="drawTrainer('opponent')">{{ trainerLoading === 'opponent' ? 'Drawing trainer...' : battleState.turnActions.trainerDrawn ? 'Trainer drawn' : 'Player 2 draw trainer' }}</button>
-          <button *ngIf="!localMultiplayer" type="button" class="pokemon-secondary-btn" (click)="opponentTurn()">Opponent attack</button>
           <button *ngIf="localMultiplayer && battleState.turnOwner === 'opponent'" type="button" class="pokemon-primary-btn" (click)="endPlayerTwoTurn()">Player 2 end turn</button>
           <button *ngIf="!localMultiplayer || battleState.turnOwner === 'player'" type="button" class="pokemon-primary-btn" [disabled]="opponentThinking" (click)="endTurn()">
             {{ opponentThinking ? 'Opponent thinking...' : 'Player 1 end turn' }}
@@ -362,7 +361,7 @@ export class BattleBoardComponent {
   }
 
   private recordBattleResultIfNeeded() {
-    if (!this.battleState?.winner || this.battleResultRecorded || this.battleState.winner === 'draw') {
+    if (this.localMultiplayer || !this.battleState?.winner || this.battleResultRecorded || this.battleState.winner === 'draw') {
       return;
     }
 
@@ -422,6 +421,10 @@ export class BattleBoardComponent {
 
     if (this.battleState && !this.battleState.winner) {
       this.battleState = this.battleService.startTurn(this.battleState, 'opponent');
+      await this.drawTrainer('opponent');
+      if (this.opponentTrainerCard) {
+        this.useTrainer('opponent');
+      }
       const move = this.battleState.opponent.active?.moves[0];
       if (move) {
         this.battleState = this.battleService.attackWithMove(this.battleState, 'opponent', move.name);

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { FirestoreService, Review } from '../services/firestore.service';
 
 @Component({
   selector: 'app-login',
@@ -49,6 +50,20 @@ import { Router } from '@angular/router';
       <div class="pokemon-silhouette" aria-hidden="true">
         <div class="pokeball"></div>
       </div>
+
+      <section class="public-reviews" aria-label="Trainer reviews">
+        <p class="profile-kicker">Community notes</p>
+        <h2>Trainer reviews</h2>
+        <p *ngIf="reviewsLoading" class="pokemon-info-text">Loading reviews...</p>
+        <p *ngIf="!reviewsLoading && !reviews.length" class="pokemon-info-text">Be the first trainer to leave a review.</p>
+        <article *ngFor="let review of reviews" class="public-review-item">
+          <div class="public-review-heading">
+            <strong>{{ review.userName }}</strong>
+            <span class="public-review-rating">{{ stars(review.rating) }}</span>
+          </div>
+          <p>{{ review.text }}</p>
+        </article>
+      </section>
     </div>
   `
 })
@@ -57,8 +72,26 @@ export class LoginComponent {
   password = '';
   error = '';
   success = '';
+  reviews: Review[] = [];
+  reviewsLoading = true;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private firestore: FirestoreService) {
+    this.loadReviews();
+  }
+
+  async loadReviews() {
+    try {
+      this.reviews = await this.firestore.getReviews();
+    } catch {
+      this.reviews = [];
+    } finally {
+      this.reviewsLoading = false;
+    }
+  }
+
+  stars(rating: number) {
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  }
 
   async login() {
     this.error = '';

@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
-import { arrayUnion, getFirestore, doc, setDoc, getDoc, increment } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, getDocs, getFirestore, doc, setDoc, getDoc, increment, limit, orderBy, query, serverTimestamp } from 'firebase/firestore';
+
+export interface Review {
+  id?: string;
+  ownerId?: string;
+  userName: string;
+  rating: number;
+  text: string;
+  createdAt?: any;
+}
 
 export interface BattleStats {
   gamesPlayed: number;
@@ -42,6 +51,32 @@ export class FirestoreService {
       gamesWon: increment(won ? 1 : 0),
       gamesLost: increment(won ? 0 : 1),
       ...(won ? { beatenPlayers: arrayUnion(opponentName) } : { lostTo: arrayUnion(opponentName) })
+    }, { merge: true });
+  }
+
+  async getReviews(): Promise<Review[]> {
+    const reviewsQuery = query(collection(this.db, 'reviews'), orderBy('createdAt', 'desc'), limit(50));
+    const snapshot = await getDocs(reviewsQuery);
+    return snapshot.docs.map(review => ({ id: review.id, ...review.data() } as Review));
+  }
+
+  async addReview(ownerId: string, review: Omit<Review, 'id' | 'createdAt' | 'ownerId'>) {
+    await addDoc(collection(this.db, 'reviews'), {
+      ownerId,
+      userName: review.userName,
+      rating: review.rating,
+      text: review.text.trim(),
+      createdAt: serverTimestamp()
+    });
+  }
+
+  async updateReview(ownerId: string, reviewId: string, review: Omit<Review, 'id' | 'createdAt' | 'ownerId'>) {
+    await setDoc(doc(this.db, 'reviews', reviewId), {
+      ownerId,
+      userName: review.userName,
+      rating: review.rating,
+      text: review.text.trim(),
+      updatedAt: serverTimestamp()
     }, { merge: true });
   }
 }

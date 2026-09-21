@@ -15,6 +15,7 @@ import { AuthService } from './services/auth.service';
           <a routerLink="/deck-lab" class="nav-link">Deck Lab</a>
           <a routerLink="/battle-board" class="nav-link">Battle Board</a>
           <a routerLink="/profile" *ngIf="auth.currentUser" class="nav-link">Profile</a>
+          <a routerLink="/reviews" *ngIf="auth.currentUser" class="nav-link">Reviews</a>
           <a routerLink="/login" *ngIf="!(auth.user$ | async)" class="nav-link">Login</a>
 
           <div *ngIf="auth.user$ | async as user" class="user-menu">

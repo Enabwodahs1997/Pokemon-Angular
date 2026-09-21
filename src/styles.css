@@ -998,6 +998,78 @@ app-root {
   margin-top: 16px;
 }
 
+.public-reviews {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 24px;
+  border: 2px solid rgba(17, 51, 166, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--pokemon-shadow);
+}
+
+.public-reviews h2 {
+  margin: 0 0 16px;
+  color: #1e3a8a;
+}
+
+.public-review-item {
+  margin-top: 12px;
+  padding: 14px;
+  border-left: 4px solid var(--pokemon-gold);
+  border-radius: 10px;
+  background: rgba(250, 204, 45, 0.08);
+}
+
+.public-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-review-rating {
+  color: #ca8a04;
+  letter-spacing: 0.08em;
+}
+
+.public-review-item p {
+  margin: 8px 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.review-page-card .pokemon-secondary-btn {
+  margin-top: 16px;
+}
+
+.my-reviews {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 2px solid rgba(17, 51, 166, 0.1);
+}
+
+.my-reviews h3 {
+  margin: 0 0 10px;
+  color: #1e3a8a;
+}
+
+.my-review-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(42, 93, 255, 0.05);
+}
+
+.my-review-item span {
+  display: block;
+  margin-top: 4px;
+  color: #475569;
+}
+
 .profile-stats {
   margin-top: 24px;
   padding-top: 22px;

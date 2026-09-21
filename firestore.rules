@@ -5,6 +5,36 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['ownerId', 'userName', 'rating', 'text', 'createdAt'])
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.userName is string
+        && request.resource.data.userName.size() > 0
+        && request.resource.data.userName.size() <= 40
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500;
+      allow update: if request.auth != null
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.keys().hasOnly(['ownerId', 'userName', 'rating', 'text', 'createdAt', 'updatedAt'])
+        && request.resource.data.userName is string
+        && request.resource.data.userName.size() > 0
+        && request.resource.data.userName.size() <= 40
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500;
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
