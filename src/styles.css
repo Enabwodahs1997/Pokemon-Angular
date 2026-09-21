@@ -578,6 +578,16 @@ app-root {
   color: #14532d;
 }
 
+.battle-result-loss {
+  border-color: #b91c1c;
+  background: linear-gradient(135deg, #fee2e2, #fff1f2);
+  color: #991b1b;
+}
+
+.battle-result-loss strong {
+  color: #991b1b;
+}
+
 .battle-result span {
   flex: 1;
   font-weight: 700;

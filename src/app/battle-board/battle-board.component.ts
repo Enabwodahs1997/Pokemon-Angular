@@ -82,6 +82,12 @@ import { BattleState, Card, CardTemplate, Deck } from '../models/card.model';
           <button type="button" class="pokemon-primary-btn" (click)="startNewBattle()">Play again</button>
         </div>
 
+        <div *ngIf="battleState.winner === 'opponent'" class="battle-result battle-result-loss" role="status" aria-live="polite">
+          <strong>Battle lost</strong>
+          <span>Your active team has been defeated.</span>
+          <button type="button" class="pokemon-primary-btn" (click)="startNewBattle()">Try again</button>
+        </div>
+
         <div *ngIf="floatingDamage.length" class="battle-damage-area">
           <div *ngFor="let effect of floatingDamage" class="damage-bubble" [ngClass]="effect.side === 'player' ? 'player-damage' : 'opponent-damage'">-{{ effect.damage }}</div>
         </div>

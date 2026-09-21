@@ -30,39 +30,6 @@ import { Router } from '@angular/router';
         <p *ngIf="error" class="pokemon-error-text">{{ error }}</p>
       </section>
 
-      <section class="pokemon-panel">
-        <h2>Card library</h2>
-        <p *ngIf="libraryRanges" class="card-library-range-note">
-          Available range: HP {{ libraryRanges.minHp }}-{{ libraryRanges.maxHp }} · Strength {{ libraryRanges.minStrength }}-{{ libraryRanges.maxStrength }}
-        </p>
-        <div class="pokemon-search-row">
-          <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" (ngModelChange)="onSearchTextChanged($event)" />
-          <input [(ngModel)]="minimumStrength" name="minimumStrength" type="number" min="0" placeholder="Min strength" aria-label="Minimum strength" />
-          <input [(ngModel)]="minimumHp" name="minimumHp" type="number" min="0" placeholder="Min HP" aria-label="Minimum HP" />
-          <select [(ngModel)]="selectedType" name="selectedType" aria-label="Filter by type">
-            <option value="">All types</option>
-            <option *ngFor="let type of cardTypes" [value]="type">{{ type | titlecase }}</option>
-          </select>
-          <button type="button" class="pokemon-secondary-btn" (click)="clearFilters()">Clear filters</button>
-        </div>
-        <div *ngIf="libraryLoading" class="card-library-loading" role="status" aria-live="polite">
-          <span class="card-library-spinner" aria-hidden="true"></span>
-          <span>Searching all Pokémon cards...</span>
-        </div>
-        <p *ngIf="!libraryLoading && !filteredLibraryCards.length" class="pokemon-info-text">No Pokémon cards match these filters.</p>
-        <div *ngFor="let card of filteredLibraryCards" class="pokemon-card-item">
-          <div>
-            <img *ngIf="card.imageUrl" class="card-thumbnail" [src]="card.imageUrl" [alt]="card.name" loading="lazy" />
-            <strong>{{ card.name }}</strong>
-            <span> ({{ card.cardType }})</span>
-            <small *ngIf="card.cardType === 'pokemon'">
-              HP {{ card.hp }} · {{ card.element }} · {{ card.abilities?.[0] || 'No ability listed' }}
-            </small>
-          </div>
-          <button type="button" class="pokemon-mini-btn" (click)="addCardToSelectedDeck(card)">Add to selected deck</button>
-        </div>
-      </section>
-
       <section *ngIf="decks.length || selectedDeckId" class="pokemon-panel">
         <h2>Your decks</h2>
         <div class="pokemon-select-row">
@@ -93,6 +60,41 @@ import { Router } from '@angular/router';
         </ul>
       </section>
 
+      <section class="pokemon-panel">
+        <h2>Card library</h2>
+        <p *ngIf="libraryRanges" class="card-library-range-note">
+          Available range: HP {{ libraryRanges.minHp }}-{{ libraryRanges.maxHp }} · Strength {{ libraryRanges.minStrength }}-{{ libraryRanges.maxStrength }}
+        </p>
+        <div class="pokemon-search-row">
+          <input [(ngModel)]="searchText" name="searchText" placeholder="Search cards" (ngModelChange)="onSearchTextChanged($event)" />
+          <input [(ngModel)]="minimumStrength" name="minimumStrength" type="number" min="0" placeholder="Min strength" aria-label="Minimum strength" />
+          <input [(ngModel)]="minimumHp" name="minimumHp" type="number" min="0" placeholder="Min HP" aria-label="Minimum HP" />
+          <select [(ngModel)]="selectedType" name="selectedType" aria-label="Filter by type">
+            <option value="">All types</option>
+            <option *ngFor="let type of cardTypes" [value]="type">{{ type | titlecase }}</option>
+          </select>
+          <button type="button" class="pokemon-secondary-btn" (click)="clearFilters()">Clear filters</button>
+        </div>
+        <div *ngIf="libraryLoading" class="card-library-loading" role="status" aria-live="polite">
+          <span class="card-library-spinner" aria-hidden="true"></span>
+          <span>Searching all Pokémon cards...</span>
+        </div>
+        <p *ngIf="!libraryLoading && !filteredLibraryCards.length" class="pokemon-info-text">No Pokémon cards match these filters.</p>
+        <div *ngFor="let card of displayedLibraryCards" class="pokemon-card-item">
+          <div>
+            <img *ngIf="card.imageUrl" class="card-thumbnail" [src]="card.imageUrl" [alt]="card.name" loading="lazy" />
+            <strong>{{ card.name }}</strong>
+            <span> ({{ card.cardType }})</span>
+            <small *ngIf="card.cardType === 'pokemon'">
+              HP {{ card.hp }} · {{ card.element }} · {{ card.abilities?.[0] || 'No ability listed' }}
+            </small>
+          </div>
+          <button type="button" class="pokemon-mini-btn" [disabled]="isCardAdded(card)" (click)="addCardToSelectedDeck(card)">
+            {{ isCardAdded(card) ? 'Added' : 'Add to selected deck' }}
+          </button>
+        </div>
+      </section>
+
     </div>
   `
 })
@@ -113,6 +115,7 @@ export class HomeComponent {
   selectedDeckId = '';
   libraryCards: CardTemplate[] = [];
   deckCards: Card[] = [];
+  private addedCardNames = new Set<string>();
 
   get filteredLibraryCards() {
     return this.libraryCards.filter(card => {
@@ -121,6 +124,16 @@ export class HomeComponent {
       const typeMatches = !this.selectedType || card.element === this.selectedType;
       return strengthMatches && hpMatches && typeMatches;
     });
+  }
+
+  get displayedLibraryCards() {
+    const cards = this.filteredLibraryCards;
+    const hasSearchOrFilters = Boolean(this.searchText.trim() || this.minimumStrength !== null || this.minimumHp !== null || this.selectedType);
+    return hasSearchOrFilters ? cards : cards.slice(0, 10);
+  }
+
+  isCardAdded(card: CardTemplate) {
+    return this.addedCardNames.has(card.name.toLowerCase());
   }
 
   get libraryRanges() {
@@ -166,6 +179,7 @@ export class HomeComponent {
     this.deckDescription = '';
     this.selectedDeckId = '';
     this.deckCards = [];
+    this.addedCardNames.clear();
     this.message = 'Ready to create a new deck.';
     this.error = '';
   }
@@ -213,6 +227,7 @@ export class HomeComponent {
     if (!user) return;
 
     await this.loadDeckCards(user.uid, deckId);
+    this.addedCardNames = new Set(this.deckCards.map(card => card.name.toLowerCase()));
   }
 
   onSearchTextChanged(searchText: string) {
@@ -299,6 +314,7 @@ export class HomeComponent {
     try {
       await this.deckBuilder.addCardToDeck(user.uid, this.selectedDeckId, card);
       this.message = 'Card added to deck.';
+      this.addedCardNames.add(cardTemplate.name.toLowerCase());
       await this.loadDeckCards(user.uid, this.selectedDeckId);
       await this.loadDecks(user.uid);
     } catch (e: any) {
@@ -333,6 +349,7 @@ export class HomeComponent {
       await this.deckBuilder.removeCardFromDeck(user.uid, this.selectedDeckId, cardId);
       this.message = 'Card removed from deck.';
       await this.loadDeckCards(user.uid, this.selectedDeckId);
+      this.addedCardNames = new Set(this.deckCards.map(card => card.name.toLowerCase()));
       await this.loadDecks(user.uid);
     } catch (e: any) {
       this.error = e.message || 'Unable to remove card';
@@ -354,6 +371,7 @@ export class HomeComponent {
 
     if (this.selectedDeckId) {
       await this.loadDeckCards(uid, this.selectedDeckId);
+      this.addedCardNames = new Set(this.deckCards.map(card => card.name.toLowerCase()));
     } else {
       this.deckCards = [];
     }
